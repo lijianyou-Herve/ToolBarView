@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/tv_time"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:background="@color/colorPrimary"
+        android:text="00:15"/>
+
+    <RelativeLayout
+        android:id="@+id/rl_preview_bar"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:layout_below="@+id/tv_time">
+
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/rv_preview_bar"
+            android:overScrollMode="never"
+            android:layout_width="match_parent"
+            android:layout_height="60dp">
+        </android.support.v7.widget.RecyclerView>
+
+        <View
+            android:id="@+id/middle_line"
+            android:layout_width="6dp"
+            android:layout_height="match_parent"
+            android:layout_centerHorizontal="true"
+            android:background="@color/color_green">
+        </View>
+
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:id="@+id/rl_material_root"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/rl_preview_bar">
+
+        <com.example.herve.toolbarview.view.MaterialItemView
+            android:id="@+id/iv_material"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_marginTop="4dp"
+            android:background="@color/color_grey"/>
+    </RelativeLayout>
+
+
+</RelativeLayout>
