@@ -22,9 +22,9 @@
 
         <android.support.v7.widget.RecyclerView
             android:id="@+id/rv_preview_bar"
-            android:overScrollMode="never"
             android:layout_width="match_parent"
-            android:layout_height="60dp">
+            android:layout_height="60dp"
+            android:overScrollMode="never">
         </android.support.v7.widget.RecyclerView>
 
         <View
@@ -43,12 +43,6 @@
         android:layout_height="wrap_content"
         android:layout_below="@+id/rl_preview_bar">
 
-        <com.example.herve.toolbarview.view.MaterialItemView
-            android:id="@+id/iv_material"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:layout_marginTop="4dp"
-            android:background="@color/color_grey"/>
     </RelativeLayout>
 
 

@@ -2,13 +2,18 @@ package com.example.herve.toolbarview.adapter;
 
 import android.content.Context;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.example.herve.toolbarview.R;
+import com.example.herve.toolbarview.bean.MaterialItemBean;
+import com.example.herve.toolbarview.view.MaterialItemView;
+import com.example.herve.toolbarview.view.PreViewBar;
+
+import java.util.ArrayList;
 
 /**
  * Created           :Herve on 2016/11/10.
@@ -19,7 +24,10 @@ import com.example.herve.toolbarview.R;
  * @ projectName     :ToolBarView
  * @ version
  */
-public class PreViewItemAdapter extends HeadFootBaseAdapter<PreViewItemAdapter.PreViewItemViewHolder, String> {
+public class PreViewItemAdapter extends HeadFootBaseAdapter<PreViewItemAdapter.PreViewItemViewHolder, String> implements PreViewBar.PreViewMaterialAdapter {
+
+
+    private ArrayList<MaterialItemBean> materialData = new ArrayList<>();
 
 
     public PreViewItemAdapter(Context mContext) {
@@ -36,17 +44,40 @@ public class PreViewItemAdapter extends HeadFootBaseAdapter<PreViewItemAdapter.P
 
     @Override
     protected void onBindItemViewHolder(PreViewItemViewHolder holder, final int position) {
-//
-//        holder.itemView.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//
-//                Toast.makeText(mContext, "点击了=" + position, Toast.LENGTH_SHORT).show();
-//            }
-//        });
 
         holder.tvItem.setText(data.get(position));
 
+    }
+
+    public void setMaterialData(ArrayList<MaterialItemBean> materialData) {
+        this.materialData = materialData;
+    }
+
+
+    @Override
+    public MaterialItemView getItemMaterialView(ViewGroup parent, int position, View leftLimitView, View rightLimitView) {
+        MaterialItemView materialItemView = (MaterialItemView) LayoutInflater.from(mContext).inflate(R.layout.item_material_layout, parent, false);
+        materialItemView.setLimitViews(leftLimitView, rightLimitView);
+        return materialItemView;
+    }
+
+    @Override
+    public float getItemTranslateX(int position) {
+
+        return materialData.get(position).getX();
+    }
+
+    @Override
+    public int getCount() {
+        return materialData.size();
+    }
+
+    @Override
+    public void setScrollListener(int position, float scrolledX) {
+
+        Log.i(TAG, "setScrollListener: 变化监听=" + scrolledX);
+
+        materialData.get(position).setX(scrolledX);
 
     }
 
@@ -58,8 +89,6 @@ public class PreViewItemAdapter extends HeadFootBaseAdapter<PreViewItemAdapter.P
             tvItem = (TextView) itemView.findViewById(R.id.tv_item);
         }
     }
-
-
 
 
 }

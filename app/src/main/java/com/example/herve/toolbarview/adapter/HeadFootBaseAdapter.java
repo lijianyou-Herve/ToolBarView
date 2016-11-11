@@ -168,6 +168,4 @@ public abstract class HeadFootBaseAdapter<T extends RecyclerView.ViewHolder, V> 
     }
 
 
-
-
 }

@@ -24,8 +24,8 @@ public class MaterialItemView extends ImageView {
     private Context mContext;
 
     /*左边*/
-    private View leftView;
-    private View rightView;
+    private View leftLimitView;
+    private View rightLimitView;
 
     public MaterialItemView(Context context) {
         this(context, null);
@@ -41,10 +41,10 @@ public class MaterialItemView extends ImageView {
     }
 
 
-    public void setLefyRightView(View leftView, View rightView) {
+    public void setLimitViews(View leftLimitView, View rightLimitView) {
 
-        this.leftView = leftView;
-        this.rightView = rightView;
+        this.leftLimitView = leftLimitView;
+        this.rightLimitView = rightLimitView;
     }
 
     /**
@@ -54,6 +54,7 @@ public class MaterialItemView extends ImageView {
         mContext = context;
 
     }
+
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
@@ -72,24 +73,22 @@ public class MaterialItemView extends ImageView {
 
                 int offsetX = x - lastX;
 
-                if (leftView != null && rightView != null) {
-                    if (getX() + offsetX < leftView.getX() + leftView.getWidth()) {
+                if (leftLimitView != null && rightLimitView != null) {
+                    if (leftLimitView.isShown() && getX() + offsetX + getWidth() / 2 < leftLimitView.getX() + leftLimitView.getWidth()) {//超过左边界，不让继续滑动
 
-                        setX(leftView.getX() + leftView.getWidth());
+                        setX(leftLimitView.getX() + leftLimitView.getWidth() - getWidth() / 2);
 
-                    } else if (rightView.isShown() && getX() + offsetX + getWidth() > rightView.getX()) {
+                    } else if (rightLimitView.isShown() && getX() + offsetX + getWidth() / 2 > rightLimitView.getX()) {//超过右边界，不让继续滑动
 
-                        setX(rightView.getX() - getWidth());
+                        setX(rightLimitView.getX() - getWidth() + getWidth() / 2);
 
-                    } else {
+                    } else {//正常值范围
                         setX(getX() + offsetX);
                     }
                 } else {
 
                     setX(getX() + offsetX);
-
                 }
-
 
                 break;
             case MotionEvent.ACTION_UP:
@@ -101,37 +100,36 @@ public class MaterialItemView extends ImageView {
                 break;
         }
 
-        return super.onTouchEvent(event);
+        return true;
     }
 
-    @Override
-    public float getTranslationX() {
-        return super.getTranslationX();
-    }
 
-    @Override
-    public void setTranslationX(float translationX) {
-        super.setTranslationX(translationX);
-    }
-
+    /**
+     * 通过这里来监听位置的变化
+     */
     @Override
     public void setX(float x) {
-
+        super.setX(x);
         if (onScrollListener != null) {
             onScrollListener.onScrolledX(x);
         }
-        super.setX(x);
-
-
     }
 
-
+    /**
+     * X轴变化监听
+     */
     private OnScrollListener onScrollListener;
 
-    public void setScollListener(OnScrollListener onScrollListener) {
+    /**
+     * 设置X轴变化监听接口
+     */
+    public void setScrollListener(OnScrollListener onScrollListener) {
         this.onScrollListener = onScrollListener;
     }
 
+    /**
+     * X轴变化监听接口
+     */
     interface OnScrollListener {
 
         void onScrolledX(float scrolledX);

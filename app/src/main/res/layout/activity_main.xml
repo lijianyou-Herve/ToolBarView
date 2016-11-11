@@ -18,7 +18,15 @@
         android:id="@+id/btn_play"
         android:layout_width="100dp"
         android:layout_height="50dp"
-        android:layout_alignParentBottom="true"
+        android:layout_above="@+id/btn_next"
         android:layout_centerHorizontal="true"
         android:text="start"/>
+
+    <Button
+        android:id="@+id/btn_next"
+        android:layout_width="100dp"
+        android:layout_height="50dp"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:text="goNext"/>
 </RelativeLayout>

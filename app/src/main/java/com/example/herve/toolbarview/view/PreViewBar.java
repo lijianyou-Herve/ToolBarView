@@ -18,6 +18,8 @@ import android.widget.TextView;
 import com.example.herve.toolbarview.R;
 import com.example.herve.toolbarview.adapter.HeadFootBaseAdapter;
 
+import java.util.ArrayList;
+
 /**
  * Created           :Herve on 2016/11/10.
  *
@@ -37,7 +39,6 @@ public class PreViewBar extends FrameLayout {
     private RelativeLayout rl_preview_bar;
     private RelativeLayout rlMaterialRoot;
     private RecyclerView rvPreviewBar;
-    private MaterialItemView ivMaterial;
     private View middleLine;
 
     private HeadFootBaseAdapter mAdapter;
@@ -68,32 +69,11 @@ public class PreViewBar extends FrameLayout {
         rl_preview_bar = (RelativeLayout) findViewById(R.id.rl_preview_bar);
         rvPreviewBar = (RecyclerView) findViewById(R.id.rv_preview_bar);
         middleLine = (View) findViewById(R.id.middle_line);
-        ivMaterial = (MaterialItemView) findViewById(R.id.iv_material);
         rlMaterialRoot = (RelativeLayout) findViewById(R.id.rl_material_root);
 
         layoutManager = new LinearLayoutManager(mContext, OrientationHelper.HORIZONTAL, false);
 
         rvPreviewBar.setLayoutManager(layoutManager);
-//
-//        ivMaterial.setOnClickListener(new OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//
-//
-//            }
-//        });
-
-        ivMaterial.setScollListener(new MaterialItemView.OnScrollListener() {
-            @Override
-            public void onScrolledX(float scrolledX) {
-
-
-                Log.i(TAG, "onScrolledX: 正常=scrolledX=" + scrolledX);
-
-
-            }
-        });
-
 
         rvPreviewBar.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
@@ -106,20 +86,40 @@ public class PreViewBar extends FrameLayout {
                 Log.i(TAG, "onScrolled: dx=" + dx);
 
                 translateCurrent += dx;
-                if (onAttach) {
-                    previewImageTran = ivMaterial.getX() - dx;
-                    ivMaterial.setX(previewImageTran);
-                } else {
-                    onAttach = true;
-                    previewImageTran = rvPreviewBar.getChildAt(1).getX();
-                    ivMaterial.setX(previewImageTran);
-                }
+
+
+                setMaterialItemChange(dx);
                 Log.i(TAG, "onScrolled: translateCurrent=" + translateCurrent);
                 super.onScrolled(recyclerView, dx, dy);
             }
         });
 
 
+    }
+
+    private void setMaterialItemChange(int dx) {
+        if (onAttach) {
+
+            for (int position = 0; position < materialItemViews.size(); position++) {
+
+                MaterialItemView materialItemView = materialItemViews.get(position);
+
+                previewImageTran = materialItemView.getX() - dx;
+
+                materialItemView.setX(previewImageTran);
+
+            }
+        } else {
+            onAttach = true;
+
+            if (leftView != null) {
+                setItemScrollX(leftView.getWidth() / 4);
+            }
+//            MaterialItemView materialItemView=materialItemViews.get(position);
+//
+//            previewImageTran = rvPreviewBar.getChildAt(1).getX();
+//            ivMaterial.setX(previewImageTran);
+        }
     }
 
     /**
@@ -144,42 +144,61 @@ public class PreViewBar extends FrameLayout {
     private View leftView;
     //右边的限制View
     private View rightView;
+    //是否是自动滑动状态
+    private boolean isAutoScroll = false;
 
+
+    //素材指示器
+    ArrayList<MaterialItemView> materialItemViews;
+
+    /**
+     * 设置Adapter
+     */
     public void setAdapter(HeadFootBaseAdapter adapter) {
         this.mAdapter = adapter;
 
-        addEmptyView();
-
+        addLimitView();
 
         addMaterialViews();
 
-        ivMaterial.setLefyRightView(leftView, rightView);
 
         rvPreviewBar.setAdapter(mAdapter);
     }
 
+    /**
+     * 添加所有的素材指示器
+     */
     private void addMaterialViews() {
         if (mAdapter instanceof PreViewMaterialAdapter) {
             materialAdapter = (PreViewMaterialAdapter) mAdapter;
+            materialItemViews = new ArrayList<>();
             for (int i = 0; i < materialAdapter.getCount(); i++) {
 
-                MaterialItemView material = materialAdapter.getItemMaterialView(rlMaterialRoot, i);
+                MaterialItemView material = materialAdapter.getItemMaterialView(rlMaterialRoot, i, leftView, rightView);
 
-                material.setX(materialAdapter.getItemTranslateX());
+                material.setX(materialAdapter.getItemTranslateX(i));
 
+                final int finalI = i;
+
+                material.setScrollListener(new MaterialItemView.OnScrollListener() {
+                    @Override
+                    public void onScrolledX(float scrolledX) {
+                        materialAdapter.setScrollListener(finalI, scrolledX);
+                    }
+                });
+
+                materialItemViews.add(material);
                 rlMaterialRoot.addView(material);
-
             }
         } else {
-
             //当前类没有继承接口
         }
-
-
     }
 
-    //添加两侧不可见的View
-    private void addEmptyView() {
+    /**
+     * 添加两侧不可见的View
+     */
+    private void addLimitView() {
         leftView = LayoutInflater.from(mContext).inflate(R.layout.transparent_view, rl_preview_bar, false);
         rightView = LayoutInflater.from(mContext).inflate(R.layout.transparent_view, rl_preview_bar, false);
         setPararmHalfOfScreen(leftView);
@@ -191,28 +210,36 @@ public class PreViewBar extends FrameLayout {
     /**/
     private Runnable translateRunnable = new Runnable() {
         public void run() {
+            isAutoScroll = true;
             setItemScrollX(1);
             translateTime += 1;
             if (translateTime < translateAnimationTime) {
                 handler.postDelayed(translateRunnable, 1);
             } else {
                 translateTime = 0;
+                setAutoScroll(false);
             }
         }
     };
 
-
-    @Override
-    public boolean onTouchEvent(MotionEvent event) {
-        Log.i(TAG, "onTouchEvent: 触碰到了dispatchTouchEvent");
-        setTranslateStop();
-        return super.onTouchEvent(event);
+    private void setAutoScroll(boolean autoScroll) {
+        isAutoScroll = autoScroll;
     }
 
+    public boolean isAutoScroll() {
+        return isAutoScroll;
+    }
+
+    /**
+     * 触碰就立即关闭自动滑动
+     */
     @Override
     public boolean dispatchTouchEvent(MotionEvent ev) {
-//        Log.i(TAG, "onTouchEvent: 触碰到了dispatchTouchEvent");
-        setTranslateStop();
+        Log.i(TAG, "onTouchEvent: 触碰到了dispatchTouchEvent");
+
+        if (isAutoScroll()) {
+            setTranslateStop();
+        }
         return super.dispatchTouchEvent(ev);
     }
 
@@ -221,7 +248,7 @@ public class PreViewBar extends FrameLayout {
      */
     public void setTranslateTime(int translateAnimationTime) {
         this.translateAnimationTime = translateAnimationTime;
-        handler.removeCallbacks(translateRunnable);
+        setAutoScroll(false);
         handler.postDelayed(translateRunnable, 1);
     }
 
@@ -231,6 +258,7 @@ public class PreViewBar extends FrameLayout {
     public void setTranslateStop() {
         translateTime = 0;
         handler.removeCallbacks(translateRunnable);
+        setAutoScroll(false);
     }
 
 
@@ -257,28 +285,43 @@ public class PreViewBar extends FrameLayout {
      * 获取屏幕的宽度
      */
     private int getScreenWidth(Context context) {
-
         return context.getResources().getDisplayMetrics().widthPixels;
-
     }
 
-    //设置宽度为屏幕的一半
+    /**
+     * 设置宽度为屏幕的一半
+     */
     private <T extends ViewGroup.MarginLayoutParams> void setPararmHalfOfScreen(View view) {
-
         int dmw = getScreenWidth(mContext);
-
         ViewGroup.LayoutParams params = view.getLayoutParams();
         params.width = dmw / 2;
         view.setLayoutParams(params);
     }
 
+    /**
+     * 素材位的适配器接口，这样可以方便使用和解耦。
+     */
     public interface PreViewMaterialAdapter {
 
-        MaterialItemView getItemMaterialView(ViewGroup parent, int position);
+        /**
+         * 填充对应的素材指示器
+         */
+        MaterialItemView getItemMaterialView(ViewGroup parent, int position, View leftLimitView, View rightLimitView);
 
-        float getItemTranslateX();
+        /**
+         * 获得素材指示器的初始X轴位置
+         */
+        float getItemTranslateX(int position);
 
+        /**
+         * 素材指示器的个数
+         */
         int getCount();
+
+        /**
+         * 在对应的素材指示器X轴发生改变时，会回调该函数
+         */
+        void setScrollListener(int position, float scrolledX);
 
     }
 }
