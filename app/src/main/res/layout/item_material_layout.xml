@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.example.herve.toolbarview.view.MaterialItemView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/iv_material"
+    android:layout_width="60dp"
+    android:layout_height="60dp"
+    android:layout_marginTop="4dp"
+    android:background="@color/color_grey"/>
