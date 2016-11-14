@@ -22,6 +22,8 @@ public class MainActivity extends AppCompatActivity {
     private PreViewBar previewBar;
     private Button btnPlay;
     private Button btn_next;
+    private Button btn_add;
+    private Button btn_remove;
     private PreViewItemAdapter preViewItemAdapter;
 
     private Context mContext;
@@ -39,6 +41,8 @@ public class MainActivity extends AppCompatActivity {
         previewBar = (PreViewBar) findViewById(R.id.preview_bar);
         btnPlay = (Button) findViewById(R.id.btn_play);
         btn_next = (Button) findViewById(R.id.btn_next);
+        btn_add = (Button) findViewById(R.id.btn_add);
+        btn_remove = (Button) findViewById(R.id.btn_remove);
 
         initData();
 
@@ -51,6 +55,25 @@ public class MainActivity extends AppCompatActivity {
     private boolean isScroll = false;
 
     private void initListener() {
+
+        btn_remove.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                preViewItemAdapter.removeMaterialItem(1);
+
+            }
+        });
+
+        btn_add.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                preViewItemAdapter.addMaterialItem();
+
+            }
+        });
+
         btnPlay.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -69,6 +92,8 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
 
+                AppConstant.materialItemBeans = materialItemBeans;
+
                 Intent intent = new Intent(mContext, EmptyActivity.class);
                 startActivity(intent);
                 finish();
@@ -85,8 +110,8 @@ public class MainActivity extends AppCompatActivity {
                 || AppConstant.materialItemBeans.size() <= 0) {
             AppConstant.materialItemBeans = new ArrayList<>();
 
-            for (int i = 0; i < 5; i++) {
-                AppConstant.materialItemBeans.add(new MaterialItemBean(i + 10));
+            for (int i = 0; i < 1; i++) {
+                AppConstant.materialItemBeans.add(new MaterialItemBean());
             }
         }
 
@@ -98,7 +123,7 @@ public class MainActivity extends AppCompatActivity {
         preViewItemAdapter = new PreViewItemAdapter(mContext);
 
         preViewItemAdapter.setData(data);
-        preViewItemAdapter.setMaterialData(materialItemBeans);
+        preViewItemAdapter.setMaterialData(previewBar, materialItemBeans);
 
         previewBar.setAdapter(preViewItemAdapter);
 

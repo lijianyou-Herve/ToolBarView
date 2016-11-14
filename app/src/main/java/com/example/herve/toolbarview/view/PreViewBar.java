@@ -1,6 +1,7 @@
 package com.example.herve.toolbarview.view;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.os.Handler;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.OrientationHelper;
@@ -11,12 +12,13 @@ import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.FrameLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.example.herve.toolbarview.R;
 import com.example.herve.toolbarview.adapter.HeadFootBaseAdapter;
+import com.example.herve.toolbarview.bean.MaterialItemBean;
+import com.example.herve.toolbarview.listener.ItemChangeListener;
 
 import java.util.ArrayList;
 
@@ -29,7 +31,7 @@ import java.util.ArrayList;
  * @ projectName     :ToolBarView
  * @ version
  */
-public class PreViewBar extends FrameLayout {
+public class PreViewBar extends RelativeLayout implements ItemChangeListener {
 
     private Context mContext;
     private final String TAG = getClass().getSimpleName();
@@ -44,6 +46,34 @@ public class PreViewBar extends FrameLayout {
     private HeadFootBaseAdapter mAdapter;
     private PreViewMaterialAdapter materialAdapter;
     private RecyclerView.LayoutManager layoutManager;
+
+    /**
+     * 添加的素材属性
+     */
+
+    //是否第一次加载完成
+    private boolean onAttach = false;
+
+    private float translateCurrent = 0;
+    //停止时间
+    private int translateAnimationTime = 0;
+    //当前时间
+    private int translateTime = 0;
+
+    private Handler handler = new Handler();
+
+    //左边的限制View
+    private View leftView;
+    //右边的限制View
+    private View rightView;
+    private View onTouchView;
+    //是否是自动滑动状态
+    private boolean isAutoScroll = false;
+    private int halfScreenWidth = 0;
+
+
+    //素材指示器
+    ArrayList<MaterialItemView> materialItemViews;
 
     public PreViewBar(Context context) {
         this(context, null);
@@ -62,7 +92,7 @@ public class PreViewBar extends FrameLayout {
     private void init(Context context) {
         this.mContext = context;
 
-        LayoutInflater.from(mContext).inflate(R.layout.bar_preview, this);
+        LayoutInflater.from(mContext).inflate(R.layout.bar_preview, this, true);
 
 
         tvTime = (TextView) findViewById(R.id.tv_time);
@@ -77,19 +107,11 @@ public class PreViewBar extends FrameLayout {
 
         rvPreviewBar.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
-            public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
-                super.onScrollStateChanged(recyclerView, newState);
-            }
-
-            @Override
             public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
-                Log.i(TAG, "onScrolled: dx=" + dx);
-
                 translateCurrent += dx;
-
+                Log.i(TAG, "onScrolled: translateCurrent=" + translateCurrent);
 
                 setMaterialItemChange(dx);
-                Log.i(TAG, "onScrolled: translateCurrent=" + translateCurrent);
                 super.onScrolled(recyclerView, dx, dy);
             }
         });
@@ -104,52 +126,25 @@ public class PreViewBar extends FrameLayout {
 
                 MaterialItemView materialItemView = materialItemViews.get(position);
 
-                previewImageTran = materialItemView.getX() - dx;
-
-                materialItemView.setX(previewImageTran);
+                Log.i(TAG, "setMaterialItemChange: leftView=" + leftView.getX() + halfScreenWidth);
+                materialItemView.setX(materialItemView.getX() - dx);
 
             }
+
         } else {
             onAttach = true;
+            if (materialItemViews != null) {
+                for (int position = 0; position < materialItemViews.size(); position++) {
 
-            if (leftView != null) {
-                setItemScrollX(leftView.getWidth() / 4);
+                    MaterialItemView materialItemView = materialItemViews.get(position);
+
+                    materialItemView.firstSetX(materialAdapter.getItemTranslateX(position));
+
+                }
             }
-//            MaterialItemView materialItemView=materialItemViews.get(position);
-//
-//            previewImageTran = rvPreviewBar.getChildAt(1).getX();
-//            ivMaterial.setX(previewImageTran);
         }
     }
 
-    /**
-     * 添加的素材属性
-     */
-    //水平偏移距离
-    private float previewImageTran = 0;
-
-    //是否第一次加载完成
-    private boolean onAttach = false;
-
-    //停止时间
-    private int translateAnimationTime = 0;
-    //当前时间
-    private int translateTime = 0;
-    //水平偏移距离
-    private float translateCurrent = 0;
-
-    private Handler handler = new Handler();
-
-    //左边的限制View
-    private View leftView;
-    //右边的限制View
-    private View rightView;
-    //是否是自动滑动状态
-    private boolean isAutoScroll = false;
-
-
-    //素材指示器
-    ArrayList<MaterialItemView> materialItemViews;
 
     /**
      * 设置Adapter
@@ -165,6 +160,55 @@ public class PreViewBar extends FrameLayout {
         rvPreviewBar.setAdapter(mAdapter);
     }
 
+    @Override
+    public void addMaterialItem() {
+        final int position = materialAdapter.getCount() - 1;
+        MaterialItemView material = materialAdapter.getItemMaterialView(rlMaterialRoot, position);
+        material.setLimitViews(leftView, rightView);
+
+        float offX = middleLine.getX() - halfScreenWidth;
+
+        material.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (onTouchView == null) {
+                    onTouchView = view;
+                    onTouchView.setBackgroundColor(Color.BLUE);
+                    rvPreviewBar.scrollBy((int) view.getX() - halfScreenWidth + view.getWidth() / 2, (int) rvPreviewBar.getY());
+
+                } else if (onTouchView != view) {
+                    onTouchView.setBackgroundColor(Color.BLACK);
+                    onTouchView = view;
+                    onTouchView.setBackgroundColor(Color.BLUE);
+                    rvPreviewBar.scrollBy((int) view.getX() - halfScreenWidth + view.getWidth() / 2, (int) rvPreviewBar.getY());
+                }
+            }
+        });
+
+        material.setScrollListener(new MaterialItemView.OnCustomTouchListener() {
+            @Override
+            public void onScrolledX(View view, float scrolledX) {
+
+                materialAdapter.setScrollListener(position, scrolledX);
+
+            }
+        });
+        material.firstSetX(offX);
+        material.setTransX(translateCurrent);
+        materialItemViews.add(material);
+        rlMaterialRoot.addView(material);
+
+
+    }
+
+    @Override
+    public void removeMaterialItem(int position) {
+
+        materialItemViews.remove(position);
+        rlMaterialRoot.removeViewAt(position);
+
+    }
+
     /**
      * 添加所有的素材指示器
      */
@@ -174,16 +218,37 @@ public class PreViewBar extends FrameLayout {
             materialItemViews = new ArrayList<>();
             for (int i = 0; i < materialAdapter.getCount(); i++) {
 
-                MaterialItemView material = materialAdapter.getItemMaterialView(rlMaterialRoot, i, leftView, rightView);
-
-                material.setX(materialAdapter.getItemTranslateX(i));
+                MaterialItemView material = materialAdapter.getItemMaterialView(rlMaterialRoot, i);
+                material.setLimitViews(leftView, rightView);
+                Log.e(TAG, "addMaterialViews: 元素位置=" + i + "位置变化=" + materialAdapter.getItemTranslateX(i));
 
                 final int finalI = i;
 
-                material.setScrollListener(new MaterialItemView.OnScrollListener() {
+                material.setOnClickListener(new OnClickListener() {
                     @Override
-                    public void onScrolledX(float scrolledX) {
+                    public void onClick(View view) {
+
+                        if (onTouchView == null) {
+                            onTouchView = view;
+                            onTouchView.setBackgroundColor(Color.BLUE);
+                            rvPreviewBar.scrollBy((int) view.getX() - halfScreenWidth + view.getWidth() / 2, (int) rvPreviewBar.getY());
+
+                        } else if (onTouchView != view) {
+                            onTouchView.setBackgroundColor(Color.BLACK);
+                            onTouchView = view;
+                            onTouchView.setBackgroundColor(Color.BLUE);
+
+                            rvPreviewBar.scrollBy((int) view.getX() - halfScreenWidth + view.getWidth() / 2, (int) rvPreviewBar.getY());
+                        }
+                    }
+                });
+
+                material.setScrollListener(new MaterialItemView.OnCustomTouchListener() {
+                    @Override
+                    public void onScrolledX(View view, float scrolledX) {
+
                         materialAdapter.setScrollListener(finalI, scrolledX);
+
                     }
                 });
 
@@ -203,6 +268,7 @@ public class PreViewBar extends FrameLayout {
         rightView = LayoutInflater.from(mContext).inflate(R.layout.transparent_view, rl_preview_bar, false);
         setPararmHalfOfScreen(leftView);
         setPararmHalfOfScreen(rightView);
+        halfScreenWidth = getScreenWidth(mContext) / 2;
         mAdapter.addHeaderView(leftView);
         mAdapter.addFooterView(rightView);
     }
@@ -235,7 +301,6 @@ public class PreViewBar extends FrameLayout {
      */
     @Override
     public boolean dispatchTouchEvent(MotionEvent ev) {
-        Log.i(TAG, "onTouchEvent: 触碰到了dispatchTouchEvent");
 
         if (isAutoScroll()) {
             setTranslateStop();
@@ -301,12 +366,15 @@ public class PreViewBar extends FrameLayout {
     /**
      * 素材位的适配器接口，这样可以方便使用和解耦。
      */
+
     public interface PreViewMaterialAdapter {
+
+        void setMaterialData(PreViewBar preViewBar,ArrayList<MaterialItemBean> materialData);
 
         /**
          * 填充对应的素材指示器
          */
-        MaterialItemView getItemMaterialView(ViewGroup parent, int position, View leftLimitView, View rightLimitView);
+        MaterialItemView getItemMaterialView(ViewGroup parent, int position);
 
         /**
          * 获得素材指示器的初始X轴位置
@@ -318,10 +386,14 @@ public class PreViewBar extends FrameLayout {
          */
         int getCount();
 
+        MaterialItemBean getItem(int position);
+
         /**
          * 在对应的素材指示器X轴发生改变时，会回调该函数
          */
         void setScrollListener(int position, float scrolledX);
 
     }
+
+
 }

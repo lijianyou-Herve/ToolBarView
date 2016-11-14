@@ -24,6 +24,7 @@
             android:id="@+id/rv_preview_bar"
             android:layout_width="match_parent"
             android:layout_height="60dp"
+            android:background="@color/color_yellow"
             android:overScrollMode="never">
         </android.support.v7.widget.RecyclerView>
 
@@ -37,11 +38,13 @@
 
     </RelativeLayout>
 
+
     <RelativeLayout
         android:id="@+id/rl_material_root"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/rl_preview_bar">
+        android:layout_height="60dp"
+        android:layout_below="@+id/rl_preview_bar"
+        android:background="@color/colorAccent">
 
     </RelativeLayout>
 

@@ -13,8 +13,8 @@ public class MaterialItemBean {
 
     private float X;
 
-    public MaterialItemBean(float x) {
-        X = x;
+
+    public MaterialItemBean() {
     }
 
     public float getX() {

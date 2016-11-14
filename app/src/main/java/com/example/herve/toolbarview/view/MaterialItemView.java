@@ -2,6 +2,7 @@ package com.example.herve.toolbarview.view;
 
 import android.content.Context;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.ImageView;
@@ -26,6 +27,11 @@ public class MaterialItemView extends ImageView {
     /*左边*/
     private View leftLimitView;
     private View rightLimitView;
+    private float transX = 0;
+    private int width = 160;
+    private int halfScreenWidth = 0;
+
+    private String TAG = getClass().getSimpleName();
 
     public MaterialItemView(Context context) {
         this(context, null);
@@ -42,9 +48,17 @@ public class MaterialItemView extends ImageView {
 
 
     public void setLimitViews(View leftLimitView, View rightLimitView) {
-
+        halfScreenWidth = getScreenWidth(mContext) / 2;
         this.leftLimitView = leftLimitView;
         this.rightLimitView = rightLimitView;
+    }
+
+
+    /**
+     * 获取屏幕的宽度
+     */
+    private int getScreenWidth(Context context) {
+        return context.getResources().getDisplayMetrics().widthPixels;
     }
 
     /**
@@ -52,7 +66,6 @@ public class MaterialItemView extends ImageView {
      */
     private void init(Context context) {
         mContext = context;
-
     }
 
 
@@ -66,6 +79,8 @@ public class MaterialItemView extends ImageView {
         switch (event.getAction()) {
             // 触摸事件中绕不开的第一步，必然执行，将按下时的触摸点坐标赋值给 lastX 和 last Y
             case MotionEvent.ACTION_DOWN:
+                setClickable(true);
+                bringToFront();
                 lastX = x;
                 lastY = y;
                 break;
@@ -73,22 +88,31 @@ public class MaterialItemView extends ImageView {
 
                 int offsetX = x - lastX;
 
-                if (leftLimitView != null && rightLimitView != null) {
-                    if (leftLimitView.isShown() && getX() + offsetX + getWidth() / 2 < leftLimitView.getX() + leftLimitView.getWidth()) {//超过左边界，不让继续滑动
+                float beforeX = getX();
 
-                        setX(leftLimitView.getX() + leftLimitView.getWidth() - getWidth() / 2);
+                if (leftLimitView.isShown() && getX() + offsetX + width / 2 < leftLimitView.getX() + halfScreenWidth) {//超过左边界，不让继续滑动
 
-                    } else if (rightLimitView.isShown() && getX() + offsetX + getWidth() / 2 > rightLimitView.getX()) {//超过右边界，不让继续滑动
+                    Log.i(TAG, "onTouchEvent: 左边界");
+                    setX(leftLimitView.getX() + halfScreenWidth - width / 2);
 
-                        setX(rightLimitView.getX() - getWidth() + getWidth() / 2);
+                } else if (rightLimitView.isShown() && getX() + offsetX + width / 2 > rightLimitView.getX()) {//超过右边界，不让继续滑动
+                    Log.i(TAG, "onTouchEvent: 右边界");
 
-                    } else {//正常值范围
-                        setX(getX() + offsetX);
-                    }
-                } else {
+                    setX(rightLimitView.getX() - width / 2);
 
+                } else {//正常值范围
                     setX(getX() + offsetX);
                 }
+
+                float nowChangeX = getX() - beforeX;
+
+                if (Math.abs(nowChangeX) > 2) {
+                    setClickable(false);
+                }
+
+                transX += nowChangeX;
+
+                setTransX(transX);
 
                 break;
             case MotionEvent.ACTION_UP:
@@ -100,39 +124,57 @@ public class MaterialItemView extends ImageView {
                 break;
         }
 
-        return true;
+        return super.onTouchEvent(event);
     }
 
+
+    public float getTransX() {
+        return transX;
+    }
+
+
+    public void setTransX(float transX) {
+        Log.i(TAG, "setTransX: transX=" + transX);
+        this.transX = transX;
+        if (onScrollListener != null) {
+            onScrollListener.onScrolledX(this, transX);
+        }
+    }
 
     /**
      * 通过这里来监听位置的变化
      */
+    public void firstSetX(float x) {
+        Log.i(TAG, "setX: getMeasuredWidth=" + halfScreenWidth);
+        float reallyX = halfScreenWidth - width / 2 + x;
+        setTransX(x);
+        super.setX(reallyX);
+
+    }
+
     @Override
     public void setX(float x) {
         super.setX(x);
-        if (onScrollListener != null) {
-            onScrollListener.onScrolledX(x);
-        }
     }
 
     /**
      * X轴变化监听
      */
-    private OnScrollListener onScrollListener;
+    private OnCustomTouchListener onScrollListener;
 
     /**
      * 设置X轴变化监听接口
      */
-    public void setScrollListener(OnScrollListener onScrollListener) {
+    public void setScrollListener(OnCustomTouchListener onScrollListener) {
         this.onScrollListener = onScrollListener;
     }
 
     /**
      * X轴变化监听接口
      */
-    interface OnScrollListener {
+    interface OnCustomTouchListener {
 
-        void onScrolledX(float scrolledX);
+        void onScrolledX(View view, float scrolledX);
 
     }
 }

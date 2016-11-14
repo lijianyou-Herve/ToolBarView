@@ -14,7 +14,7 @@ public abstract class HeadFootBaseAdapter<T extends RecyclerView.ViewHolder, V> 
     private static final int BASE_ITEM_TYPE_FOOTER = 200000;
 
     protected Context mContext;
-    protected String TAG = getClass().getSimpleName() + "HeadFootBaseAdapter";
+    protected String TAG = getClass().getSimpleName();
     protected ArrayList<V> data = new ArrayList<>();
 
     private T t;
@@ -67,7 +67,6 @@ public abstract class HeadFootBaseAdapter<T extends RecyclerView.ViewHolder, V> 
         }
         return VIE_TYPE_SIMPLE;
     }
-
 
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {

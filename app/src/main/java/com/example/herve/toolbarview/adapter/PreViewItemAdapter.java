@@ -27,11 +27,13 @@ import java.util.ArrayList;
 public class PreViewItemAdapter extends HeadFootBaseAdapter<PreViewItemAdapter.PreViewItemViewHolder, String> implements PreViewBar.PreViewMaterialAdapter {
 
 
+    private PreViewBar preViewBar;
     private ArrayList<MaterialItemBean> materialData = new ArrayList<>();
 
 
     public PreViewItemAdapter(Context mContext) {
         super(mContext);
+
     }
 
     @Override
@@ -49,15 +51,18 @@ public class PreViewItemAdapter extends HeadFootBaseAdapter<PreViewItemAdapter.P
 
     }
 
-    public void setMaterialData(ArrayList<MaterialItemBean> materialData) {
-        this.materialData = materialData;
-    }
 
 
     @Override
-    public MaterialItemView getItemMaterialView(ViewGroup parent, int position, View leftLimitView, View rightLimitView) {
+    public void setMaterialData(PreViewBar preViewBar, ArrayList<MaterialItemBean> materialData) {
+        this.preViewBar = preViewBar;
+        this.materialData = materialData;
+
+    }
+
+    @Override
+    public MaterialItemView getItemMaterialView(ViewGroup parent, int position) {
         MaterialItemView materialItemView = (MaterialItemView) LayoutInflater.from(mContext).inflate(R.layout.item_material_layout, parent, false);
-        materialItemView.setLimitViews(leftLimitView, rightLimitView);
         return materialItemView;
     }
 
@@ -73,12 +78,27 @@ public class PreViewItemAdapter extends HeadFootBaseAdapter<PreViewItemAdapter.P
     }
 
     @Override
+    public MaterialItemBean getItem(int position) {
+        return materialData.get(position);
+    }
+
+    @Override
     public void setScrollListener(int position, float scrolledX) {
 
-        Log.i(TAG, "setScrollListener: 变化监听=" + scrolledX);
+        Log.e(TAG, "setScrollListener: 元素位置=" + position + "位置变化=" + scrolledX);
 
         materialData.get(position).setX(scrolledX);
 
+    }
+
+    public void addMaterialItem() {
+        materialData.add(new MaterialItemBean());
+        preViewBar.addMaterialItem();
+    }
+
+    public void removeMaterialItem(int position) {
+        preViewBar.removeMaterialItem(position);
+        materialData.remove(position);
     }
 
     class PreViewItemViewHolder extends RecyclerView.ViewHolder {
