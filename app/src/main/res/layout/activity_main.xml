@@ -7,35 +7,71 @@
     android:layout_height="match_parent"
     tools:context="com.example.herve.toolbarview.ui.MainActivity">
 
+    <RelativeLayout
+        android:id="@+id/video_root"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true">
+
+        <com.example.herve.toolbarview.view.ijkplayer.widget.media.IjkVideoView
+            android:id="@+id/ijk_video"
+            android:layout_width="match_parent"
+            android:layout_height="250dp"
+            android:layout_alignParentTop="true">
+
+            <TableLayout
+                android:id="@+id/hud_view"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="right|center_vertical"
+                android:background="@color/ijk_transparent_dark"
+                android:visibility="gone"
+                android:padding="8dp"/>
+        </com.example.herve.toolbarview.view.ijkplayer.widget.media.IjkVideoView>
+    </RelativeLayout>
+
+
     <com.example.herve.toolbarview.view.PreViewBar
         android:id="@+id/preview_bar"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/video_root"
+        android:layout_marginTop="6dp">
     </com.example.herve.toolbarview.view.PreViewBar>
 
 
-    <Button
-        android:id="@+id/btn_remove"
-        android:layout_width="100dp"
-        android:layout_height="50dp"
-        android:layout_above="@+id/btn_add"
-        android:layout_centerHorizontal="true"
-        android:text="移除"/>
-    <Button
-        android:id="@+id/btn_add"
-        android:layout_width="100dp"
-        android:layout_height="50dp"
-        android:layout_above="@+id/btn_play"
-        android:layout_centerHorizontal="true"
-        android:text="添加"/>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/preview_bar"
+        android:gravity="center"
+        android:orientation="horizontal">
 
-    <Button
-        android:id="@+id/btn_play"
-        android:layout_width="100dp"
-        android:layout_height="50dp"
-        android:layout_above="@+id/btn_next"
-        android:layout_centerHorizontal="true"
-        android:text="自动平移"/>
+        <Button
+            android:id="@+id/btn_video"
+            android:layout_width="100dp"
+            android:layout_height="50dp"
+            android:text="播放"/>
+
+        <Button
+            android:id="@+id/btn_remove"
+            android:layout_width="100dp"
+            android:layout_height="50dp"
+            android:text="移除"/>
+
+        <Button
+            android:id="@+id/btn_add"
+            android:layout_width="100dp"
+            android:layout_height="50dp"
+            android:text="添加"/>
+
+        <Button
+            android:id="@+id/btn_play"
+            android:layout_width="100dp"
+            android:layout_height="50dp"
+            android:text="自动平移"/>
+    </LinearLayout>
+
 
     <Button
         android:id="@+id/btn_next"

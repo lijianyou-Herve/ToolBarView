@@ -7,6 +7,8 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.widget.ImageView;
 
+import com.example.herve.toolbarview.utils.DensityUtil;
+
 /**
  * Created           :Herve on 2016/11/11.
  *
@@ -28,7 +30,7 @@ public class MaterialItemView extends ImageView {
     private View leftLimitView;
     private View rightLimitView;
     private float transX = 0;
-    private int width = 160;
+    private int width = 50;
     private int halfScreenWidth = 0;
 
     private String TAG = getClass().getSimpleName();
@@ -48,7 +50,6 @@ public class MaterialItemView extends ImageView {
 
 
     public void setLimitViews(View leftLimitView, View rightLimitView) {
-        halfScreenWidth = getScreenWidth(mContext) / 2;
         this.leftLimitView = leftLimitView;
         this.rightLimitView = rightLimitView;
     }
@@ -66,6 +67,9 @@ public class MaterialItemView extends ImageView {
      */
     private void init(Context context) {
         mContext = context;
+        halfScreenWidth = getScreenWidth(mContext) / 2;
+        width = DensityUtil.dip2px(context, width);
+
     }
 
 
@@ -145,6 +149,7 @@ public class MaterialItemView extends ImageView {
      * 通过这里来监听位置的变化
      */
     public void firstSetX(float x) {
+
         Log.i(TAG, "setX: getMeasuredWidth=" + halfScreenWidth);
         float reallyX = halfScreenWidth - width / 2 + x;
         setTransX(x);

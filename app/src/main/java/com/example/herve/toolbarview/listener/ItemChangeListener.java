@@ -4,5 +4,5 @@ public interface ItemChangeListener {
 
     void addMaterialItem();
 
-    void removeMaterialItem( int position);
+    void removeMaterialItem(int position);
 }

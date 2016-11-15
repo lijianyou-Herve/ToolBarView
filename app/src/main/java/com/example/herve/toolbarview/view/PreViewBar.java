@@ -1,17 +1,20 @@
 package com.example.herve.toolbarview.view;
 
+import android.animation.ValueAnimator;
 import android.content.Context;
 import android.graphics.Color;
 import android.os.Handler;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.OrientationHelper;
 import android.support.v7.widget.RecyclerView;
+import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.LinearInterpolator;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
@@ -19,6 +22,8 @@ import com.example.herve.toolbarview.R;
 import com.example.herve.toolbarview.adapter.HeadFootBaseAdapter;
 import com.example.herve.toolbarview.bean.MaterialItemBean;
 import com.example.herve.toolbarview.listener.ItemChangeListener;
+import com.example.herve.toolbarview.utils.DensityUtil;
+import com.example.herve.toolbarview.utils.TimeUtils;
 
 import java.util.ArrayList;
 
@@ -55,12 +60,10 @@ public class PreViewBar extends RelativeLayout implements ItemChangeListener {
     private boolean onAttach = false;
 
     private float translateCurrent = 0;
-    //停止时间
-    private int translateAnimationTime = 0;
-    //当前时间
-    private int translateTime = 0;
 
-    private Handler handler = new Handler();
+    //当前自动滑动位置
+    private float translateX = 0;
+
 
     //左边的限制View
     private View leftView;
@@ -72,8 +75,12 @@ public class PreViewBar extends RelativeLayout implements ItemChangeListener {
     private int halfScreenWidth = 0;
 
 
+    private float totalWidth = 0;
+    private int preViewItemWidth = 52;
+    private long totalTime = 1500;//毫秒计时
+    private long currentTime = 0;//毫秒计时
+
     //素材指示器
-    ArrayList<MaterialItemView> materialItemViews;
 
     public PreViewBar(Context context) {
         this(context, null);
@@ -94,7 +101,6 @@ public class PreViewBar extends RelativeLayout implements ItemChangeListener {
 
         LayoutInflater.from(mContext).inflate(R.layout.bar_preview, this, true);
 
-
         tvTime = (TextView) findViewById(R.id.tv_time);
         rl_preview_bar = (RelativeLayout) findViewById(R.id.rl_preview_bar);
         rvPreviewBar = (RecyclerView) findViewById(R.id.rv_preview_bar);
@@ -110,37 +116,42 @@ public class PreViewBar extends RelativeLayout implements ItemChangeListener {
             public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
                 translateCurrent += dx;
                 Log.i(TAG, "onScrolled: translateCurrent=" + translateCurrent);
+                lastValue = (int) translateCurrent;
 
+                currentTime = (long) (translateCurrent / totalWidth * totalTime);
+
+                Log.i(TAG, "onScrolled: totalTime=" + totalTime);
+                Log.i(TAG, "onScrolled: currentTime=" + currentTime);
+                Log.i(TAG, "onScrolled: currentTime=" + TimeUtils.secToHMSTime_TextViewShow(currentTime / 1000d, 50));
+
+                tvTime.setText(TimeUtils.secToHMSTime_TextViewShow(currentTime / 1000d, 50));
+                if (onPreViewChangeListener != null) {
+                    onPreViewChangeListener.onTimelineChangeListener(totalTime / 1000d, currentTime / 1000);
+                }
                 setMaterialItemChange(dx);
                 super.onScrolled(recyclerView, dx, dy);
             }
         });
 
+        Log.i(TAG, "init: totalWidth" + totalWidth);
 
     }
 
+
     private void setMaterialItemChange(int dx) {
-        if (onAttach) {
-
-            for (int position = 0; position < materialItemViews.size(); position++) {
-
-                MaterialItemView materialItemView = materialItemViews.get(position);
-
-                Log.i(TAG, "setMaterialItemChange: leftView=" + leftView.getX() + halfScreenWidth);
+        if (onAttach) {//后续滑动
+            for (int position = 0; position < rlMaterialRoot.getChildCount(); position++) {
+                MaterialItemView materialItemView = (MaterialItemView) rlMaterialRoot.getChildAt(position);
+                Log.i(TAG, "setMaterialItemChange: position=" + position);
+                Log.i(TAG, "setMaterialItemChange: 位置刷新=" + (materialItemView.getX() - dx));
                 materialItemView.setX(materialItemView.getX() - dx);
-
             }
-
-        } else {
+        } else {//第一次进入
             onAttach = true;
-            if (materialItemViews != null) {
-                for (int position = 0; position < materialItemViews.size(); position++) {
 
-                    MaterialItemView materialItemView = materialItemViews.get(position);
-
-                    materialItemView.firstSetX(materialAdapter.getItemTranslateX(position));
-
-                }
+            for (int position = 0; position < rlMaterialRoot.getChildCount(); position++) {
+                MaterialItemView materialItemView = (MaterialItemView) rlMaterialRoot.getChildAt(position);
+                materialItemView.firstSetX(materialAdapter.getItemTranslateX(position));
             }
         }
     }
@@ -156,56 +167,88 @@ public class PreViewBar extends RelativeLayout implements ItemChangeListener {
 
         addMaterialViews();
 
+        totalWidth = DensityUtil.dip2px(mContext, preViewItemWidth) * mAdapter.getSimpleCount();
 
         rvPreviewBar.setAdapter(mAdapter);
+    }
+
+    public void notifyDataSetChanged() {
+        for (int i = 0; i < rlMaterialRoot.getChildCount(); i++) {
+            rlMaterialRoot.getChildAt(i).setTag(i);
+        }
     }
 
     @Override
     public void addMaterialItem() {
         final int position = materialAdapter.getCount() - 1;
         MaterialItemView material = materialAdapter.getItemMaterialView(rlMaterialRoot, position);
-        material.setLimitViews(leftView, rightView);
-
         float offX = middleLine.getX() - halfScreenWidth;
+        setItemAttribute(position, material);
 
-        material.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (onTouchView == null) {
-                    onTouchView = view;
-                    onTouchView.setBackgroundColor(Color.BLUE);
-                    rvPreviewBar.scrollBy((int) view.getX() - halfScreenWidth + view.getWidth() / 2, (int) rvPreviewBar.getY());
-
-                } else if (onTouchView != view) {
-                    onTouchView.setBackgroundColor(Color.BLACK);
-                    onTouchView = view;
-                    onTouchView.setBackgroundColor(Color.BLUE);
-                    rvPreviewBar.scrollBy((int) view.getX() - halfScreenWidth + view.getWidth() / 2, (int) rvPreviewBar.getY());
-                }
-            }
-        });
-
-        material.setScrollListener(new MaterialItemView.OnCustomTouchListener() {
-            @Override
-            public void onScrolledX(View view, float scrolledX) {
-
-                materialAdapter.setScrollListener(position, scrolledX);
-
-            }
-        });
         material.firstSetX(offX);
         material.setTransX(translateCurrent);
-        materialItemViews.add(material);
-        rlMaterialRoot.addView(material);
 
+        onMaterialSelect(material, false);
+
+        rlMaterialRoot.addView(material);
+        notifyDataSetChanged();
 
     }
 
+    private void onMaterialSelect(MaterialItemView material, boolean needScroll) {
+        if (onTouchView == null) {
+            onTouchView = material;
+            onTouchView.setBackgroundColor(Color.BLUE);
+
+        } else if (onTouchView != material) {
+            onTouchView.setBackgroundColor(Color.BLACK);
+            onTouchView = material;
+            onTouchView.setBackgroundColor(Color.BLUE);
+        }
+        if (needScroll) {
+            rvPreviewBar.scrollBy((int) material.getX() - halfScreenWidth + material.getWidth() / 2, (int) rvPreviewBar.getY());
+        }
+        if (onPreViewChangeListener != null) {
+            onPreViewChangeListener.onMaterialItemSelectListener(material, (int) material.getTag());
+        }
+    }
+
+
+    private OnClickListener itemClick = new OnClickListener() {
+        @Override
+        public void onClick(View view) {
+
+            onMaterialSelect((MaterialItemView) view, true);
+
+        }
+    };
+
+    private MaterialItemView.OnCustomTouchListener onCustomTouchListener = new MaterialItemView.OnCustomTouchListener() {
+        @Override
+        public void onScrolledX(View view, float scrolledX) {
+
+            materialAdapter.setScrollListener((int) view.getTag(), scrolledX);
+
+        }
+    };
+
+    private void setItemAttribute(int position, MaterialItemView material) {
+
+        material.setLimitViews(leftView, rightView);
+        material.setTag(position);
+        material.setOnClickListener(itemClick);
+        material.setScrollListener(onCustomTouchListener);
+    }
+
+
     @Override
     public void removeMaterialItem(int position) {
-
-        materialItemViews.remove(position);
-        rlMaterialRoot.removeViewAt(position);
+        if (onTouchView == null && rlMaterialRoot.getChildCount() > 0) {
+            rlMaterialRoot.removeViewAt(0);
+        } else {
+            rlMaterialRoot.removeView(onTouchView);
+        }
+        notifyDataSetChanged();
 
     }
 
@@ -215,44 +258,11 @@ public class PreViewBar extends RelativeLayout implements ItemChangeListener {
     private void addMaterialViews() {
         if (mAdapter instanceof PreViewMaterialAdapter) {
             materialAdapter = (PreViewMaterialAdapter) mAdapter;
-            materialItemViews = new ArrayList<>();
             for (int i = 0; i < materialAdapter.getCount(); i++) {
 
                 MaterialItemView material = materialAdapter.getItemMaterialView(rlMaterialRoot, i);
-                material.setLimitViews(leftView, rightView);
-                Log.e(TAG, "addMaterialViews: 元素位置=" + i + "位置变化=" + materialAdapter.getItemTranslateX(i));
+                setItemAttribute(i, material);
 
-                final int finalI = i;
-
-                material.setOnClickListener(new OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-
-                        if (onTouchView == null) {
-                            onTouchView = view;
-                            onTouchView.setBackgroundColor(Color.BLUE);
-                            rvPreviewBar.scrollBy((int) view.getX() - halfScreenWidth + view.getWidth() / 2, (int) rvPreviewBar.getY());
-
-                        } else if (onTouchView != view) {
-                            onTouchView.setBackgroundColor(Color.BLACK);
-                            onTouchView = view;
-                            onTouchView.setBackgroundColor(Color.BLUE);
-
-                            rvPreviewBar.scrollBy((int) view.getX() - halfScreenWidth + view.getWidth() / 2, (int) rvPreviewBar.getY());
-                        }
-                    }
-                });
-
-                material.setScrollListener(new MaterialItemView.OnCustomTouchListener() {
-                    @Override
-                    public void onScrolledX(View view, float scrolledX) {
-
-                        materialAdapter.setScrollListener(finalI, scrolledX);
-
-                    }
-                });
-
-                materialItemViews.add(material);
                 rlMaterialRoot.addView(material);
             }
         } else {
@@ -273,20 +283,45 @@ public class PreViewBar extends RelativeLayout implements ItemChangeListener {
         mAdapter.addFooterView(rightView);
     }
 
-    /**/
-    private Runnable translateRunnable = new Runnable() {
-        public void run() {
-            isAutoScroll = true;
-            setItemScrollX(1);
-            translateTime += 1;
-            if (translateTime < translateAnimationTime) {
-                handler.postDelayed(translateRunnable, 1);
-            } else {
-                translateTime = 0;
-                setAutoScroll(false);
-            }
+    private int lastValue = 0;
+
+    private ValueAnimator valueAnimator;
+
+    private int lastChangeValue = 0;
+
+    public void startAnim(int currentPosition) {
+        lastChangeValue = 0;
+        if (valueAnimator != null) {
+            valueAnimator.cancel();
         }
-    };
+        valueAnimator = ValueAnimator.ofInt((int) (totalWidth - lastValue));
+        valueAnimator.setDuration(totalTime - currentTime);
+        valueAnimator.setInterpolator(new LinearInterpolator());
+        valueAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator animation) {
+//
+//                Log.i(TAG, "onAnimationUpdate: currentPosition=" + currentPosition);
+
+//                int animationValue = (int) ((float) currentPosition / 1000 * totalWidth);
+                int animationValue = (int) animation.getAnimatedValue();
+
+                Log.i(TAG, "onAnimationUpdate: animationValue=" + animationValue);
+                Log.i(TAG, "onAnimationUpdate: lastChangeValue=" + lastChangeValue);
+                int animationX = animationValue - lastChangeValue;
+
+                lastChangeValue = animationValue;
+
+                Log.i(TAG, "onAnimationUpdate: animationX= " + animationX);
+
+                rvPreviewBar.scrollBy(animationX, (int) rvPreviewBar.getY());
+
+            }
+        });
+
+        valueAnimator.start();
+    }
+
 
     private void setAutoScroll(boolean autoScroll) {
         isAutoScroll = autoScroll;
@@ -301,48 +336,26 @@ public class PreViewBar extends RelativeLayout implements ItemChangeListener {
      */
     @Override
     public boolean dispatchTouchEvent(MotionEvent ev) {
-
-        if (isAutoScroll()) {
-            setTranslateStop();
+        if (valueAnimator != null) {
+            valueAnimator.cancel();
         }
         return super.dispatchTouchEvent(ev);
     }
 
-    /**
-     * 设置滑动时间
-     */
-    public void setTranslateTime(int translateAnimationTime) {
-        this.translateAnimationTime = translateAnimationTime;
-        setAutoScroll(false);
-        handler.postDelayed(translateRunnable, 1);
+
+    public float getTotalTime() {
+        return totalTime;
     }
 
-    /**
-     * 停止滑动
-     */
-    public void setTranslateStop() {
-        translateTime = 0;
-        handler.removeCallbacks(translateRunnable);
-        setAutoScroll(false);
+    public void setTotalTime(int totalTime) {
+        this.totalTime = totalTime;
     }
-
 
     /**
      * 设置View的滑动距离
      */
     private void setItemScrollX(int value) {
-//        rvPreviewBar.setScrollX(value);
-//        rvPreviewBar.smoothScrollBy(value,rvPreviewBar.getScrollX());
-
-
-//        rvPreviewBar.smoothScrollToPosition(value);
-//        rvPreviewBar.onScrolled(value,rvPreviewBar.getScrollX());
-//        rvPreviewBar.scrollTo(-200, -100);
         rvPreviewBar.scrollBy(value, rvPreviewBar.getScrollY());
-//        rvPreviewBar.smoothScrollBy(value,rvPreviewBar.getScrollY());
-
-//        rvPreviewBar.scrollToPosition(value);
-//        rvPreviewBar.scrollTo(rvPreviewBar.getScrollX(),value);
     }
 
 
@@ -369,7 +382,7 @@ public class PreViewBar extends RelativeLayout implements ItemChangeListener {
 
     public interface PreViewMaterialAdapter {
 
-        void setMaterialData(PreViewBar preViewBar,ArrayList<MaterialItemBean> materialData);
+        void setMaterialData(PreViewBar preViewBar, ArrayList<MaterialItemBean> materialData);
 
         /**
          * 填充对应的素材指示器
@@ -392,6 +405,21 @@ public class PreViewBar extends RelativeLayout implements ItemChangeListener {
          * 在对应的素材指示器X轴发生改变时，会回调该函数
          */
         void setScrollListener(int position, float scrolledX);
+
+    }
+
+
+    private OnPreViewChangeListener onPreViewChangeListener;
+
+    public void setOnPreViewChangeListener(OnPreViewChangeListener onPreViewChangeListener) {
+        this.onPreViewChangeListener = onPreViewChangeListener;
+    }
+
+    public interface OnPreViewChangeListener {
+
+        void onTimelineChangeListener(double totalTime, double currentTime);
+
+        void onMaterialItemSelectListener(MaterialItemView view, int position);
 
     }
 

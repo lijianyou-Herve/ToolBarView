@@ -10,6 +10,7 @@ import android.widget.TextView;
 
 import com.example.herve.toolbarview.R;
 import com.example.herve.toolbarview.bean.MaterialItemBean;
+import com.example.herve.toolbarview.utils.DensityUtil;
 import com.example.herve.toolbarview.view.MaterialItemView;
 import com.example.herve.toolbarview.view.PreViewBar;
 
@@ -52,7 +53,6 @@ public class PreViewItemAdapter extends HeadFootBaseAdapter<PreViewItemAdapter.P
     }
 
 
-
     @Override
     public void setMaterialData(PreViewBar preViewBar, ArrayList<MaterialItemBean> materialData) {
         this.preViewBar = preViewBar;
@@ -63,6 +63,8 @@ public class PreViewItemAdapter extends HeadFootBaseAdapter<PreViewItemAdapter.P
     @Override
     public MaterialItemView getItemMaterialView(ViewGroup parent, int position) {
         MaterialItemView materialItemView = (MaterialItemView) LayoutInflater.from(mContext).inflate(R.layout.item_material_layout, parent, false);
+
+
         return materialItemView;
     }
 
@@ -90,6 +92,7 @@ public class PreViewItemAdapter extends HeadFootBaseAdapter<PreViewItemAdapter.P
         materialData.get(position).setX(scrolledX);
 
     }
+
 
     public void addMaterialItem() {
         materialData.add(new MaterialItemBean());
