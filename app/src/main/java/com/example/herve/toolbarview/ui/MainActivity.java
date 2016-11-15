@@ -2,8 +2,8 @@ package com.example.herve.toolbarview.ui;
 
 import android.content.Context;
 import android.content.Intent;
-import android.media.MediaPlayer;
 import android.os.Bundle;
+import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
@@ -15,10 +15,12 @@ import com.example.herve.toolbarview.R;
 import com.example.herve.toolbarview.adapter.PreViewItemAdapter;
 import com.example.herve.toolbarview.bean.MaterialItemBean;
 import com.example.herve.toolbarview.common.AppConstant;
-import com.example.herve.toolbarview.view.MaterialItemView;
-import com.example.herve.toolbarview.view.PreViewBar;
+import com.example.herve.toolbarview.view.ijkplayer.widget.media.IMediaController;
+import com.example.herve.toolbarview.view.previewbar.MaterialItemView;
+import com.example.herve.toolbarview.view.previewbar.PreViewBar;
 import com.example.herve.toolbarview.view.ijkplayer.widget.media.AndroidMediaController;
 import com.example.herve.toolbarview.view.ijkplayer.widget.media.IjkVideoView;
+import com.example.herve.toolbarview.view.previewbar.PreViewBarMediaControl;
 
 import java.util.ArrayList;
 
@@ -36,7 +38,7 @@ public class MainActivity extends AppCompatActivity {
     private Button btn_video;
     private IjkVideoView ijk_video;
     private TableLayout hud_view;
-    private AndroidMediaController mediaController;
+    private PreViewBarMediaControl mediaController;
     private PreViewItemAdapter preViewItemAdapter;
 
     private int selectPosition = 0;
@@ -68,35 +70,13 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    private final Runnable mShowProgress = new Runnable() {
-        @Override
-        public void run() {
-            int pos = setProgress();
-            btnPlay.postDelayed(mShowProgress, 1000 - (pos % 1000));
-        }
-    };
-
-    private int setProgress() {
-
-        int position = ijk_video.getCurrentPosition();
-        int duration = ijk_video.getDuration();
-        if (duration > 0) {
-            // use long to avoid overflow
-            long pos = 1000L * position / duration;
-
-            previewBar.startAnim((int) pos);
-
-        }
-
-        return position;
-    }
 
     private void initListener() {
         btn_video.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (ijk_video.isPlaying()) {
-                    ijk_video.stopPlayback();
+                    ijk_video.pause();
                 } else {
                     ijk_video.setVideoPath(url);
                     ijk_video.start();
@@ -128,7 +108,6 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
 
-
             }
         });
 
@@ -148,9 +127,6 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onTimelineChangeListener(double totalTime, double currentTime) {
 
-                Log.i(TAG, "onTimelineChangeListener:totalTime= " + totalTime);
-                Log.i(TAG, "onTimelineChangeListener: currentTime=" + currentTime);
-
             }
 
             @Override
@@ -164,12 +140,10 @@ public class MainActivity extends AppCompatActivity {
         ijk_video.setOnPreparedListener(new IMediaPlayer.OnPreparedListener() {
             @Override
             public void onPrepared(IMediaPlayer mp) {
+
                 mp.start();
-//                previewBar.startAnim(ijk_video.getCurrentPosition());
-//                btnPlay.postDelayed(mShowProgress, 0);
+                previewBar.start();
 
-
-                previewBar.startAnim(0);
             }
         });
 
@@ -184,27 +158,36 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        mediaController.setOnStateListener(new PreViewBarMediaControl.OnStateListener() {
+            @Override
+            public void onStateListener(boolean isPlaying) {
+
+                if (isPlaying) {
+                    previewBar.start();
+                } else {
+                    previewBar.pause();
+                }
+
+            }
+        });
+
 
     }
 
-    private int totalTime = 74000;
-
-
-    private int last = 0;
-
+    private int totalTime = 34000;
 
     private void initData() {
 
 
-        url = "http://bj.bcebos.com/v1/tomato-dev/00000000-0000-0000-0000-000000000000/filmTemplate/0118.mp4";
+        url = Environment.getExternalStorageDirectory() + "/BJX" + "/20160918_104437.mp4";
 
         IjkMediaPlayer.loadLibrariesOnce(null);
         IjkMediaPlayer.native_profileBegin("libijkplayer.so");
 
-        mediaController = new AndroidMediaController(mContext);
+        mediaController = new PreViewBarMediaControl(mContext);
         ijk_video.setMediaController(mediaController);
         ijk_video.setHudView(hud_view);
-
+        previewBar.setMediaPlayerControl(ijk_video);
         data = new ArrayList<>();
 
         if (AppConstant.materialItemBeans == null

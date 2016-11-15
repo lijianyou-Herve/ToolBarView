@@ -1,4 +1,4 @@
-package com.example.herve.toolbarview.view;
+package com.example.herve.toolbarview.view.previewbar;
 
 import android.content.Context;
 import android.util.AttributeSet;

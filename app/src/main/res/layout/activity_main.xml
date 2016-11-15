@@ -31,13 +31,13 @@
     </RelativeLayout>
 
 
-    <com.example.herve.toolbarview.view.PreViewBar
+    <com.example.herve.toolbarview.view.previewbar.PreViewBar
         android:id="@+id/preview_bar"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@+id/video_root"
         android:layout_marginTop="6dp">
-    </com.example.herve.toolbarview.view.PreViewBar>
+    </com.example.herve.toolbarview.view.previewbar.PreViewBar>
 
 
     <LinearLayout

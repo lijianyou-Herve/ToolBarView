@@ -10,9 +10,8 @@ import android.widget.TextView;
 
 import com.example.herve.toolbarview.R;
 import com.example.herve.toolbarview.bean.MaterialItemBean;
-import com.example.herve.toolbarview.utils.DensityUtil;
-import com.example.herve.toolbarview.view.MaterialItemView;
-import com.example.herve.toolbarview.view.PreViewBar;
+import com.example.herve.toolbarview.view.previewbar.MaterialItemView;
+import com.example.herve.toolbarview.view.previewbar.PreViewBar;
 
 import java.util.ArrayList;
 
@@ -87,8 +86,11 @@ public class PreViewItemAdapter extends HeadFootBaseAdapter<PreViewItemAdapter.P
     @Override
     public void setScrollListener(int position, float scrolledX) {
 
+        if (materialData.size() == 0 ||
+                position > materialData.size() - 1) {
+            return;
+        }
         Log.e(TAG, "setScrollListener: 元素位置=" + position + "位置变化=" + scrolledX);
-
         materialData.get(position).setX(scrolledX);
 
     }
@@ -100,8 +102,10 @@ public class PreViewItemAdapter extends HeadFootBaseAdapter<PreViewItemAdapter.P
     }
 
     public void removeMaterialItem(int position) {
-        preViewBar.removeMaterialItem(position);
-        materialData.remove(position);
+        if (materialData.size() > 0) {
+            preViewBar.removeMaterialItem(position);
+            materialData.remove(position);
+        }
     }
 
     class PreViewItemViewHolder extends RecyclerView.ViewHolder {

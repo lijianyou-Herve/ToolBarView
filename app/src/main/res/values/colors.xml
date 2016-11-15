@@ -10,9 +10,11 @@
 
     <color name="color_pink">#e4d162ca</color>
     <color name="color_yellow">#c3e6db4b</color>
+    <color name="white">#FFF9F2</color> <!-- 白色 -->
 
 
     <color name="black_overlay">#66000000</color>
+    <color name="mediacontroller_bg">#64151515</color>
 
     <color name="ijk_color_blue_main">@color/ijk_color_blue_500</color>
     <color name="ijk_color_blue_50">#E3F2FD</color>
