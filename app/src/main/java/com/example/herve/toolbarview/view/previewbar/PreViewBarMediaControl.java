@@ -2,7 +2,6 @@ package com.example.herve.toolbarview.view.previewbar;
 
 import android.content.Context;
 import android.util.AttributeSet;
-import android.widget.MediaController;
 
 import com.example.herve.toolbarview.view.ijkplayer.widget.media.AndroidMediaController;
 

@@ -1,7 +1,6 @@
 package com.example.herve.toolbarview.view.previewbar;
 
 import android.content.Context;
-import android.graphics.Color;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.OrientationHelper;
 import android.support.v7.widget.RecyclerView;
@@ -11,16 +10,13 @@ import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.MediaController;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.example.herve.toolbarview.R;
 import com.example.herve.toolbarview.adapter.HeadFootBaseAdapter;
 import com.example.herve.toolbarview.bean.MaterialItemBean;
-import com.example.herve.toolbarview.listener.ItemChangeListener;
-import com.example.herve.toolbarview.utils.DensityUtil;
-import com.example.herve.toolbarview.utils.TimeUtils;
+import com.example.herve.toolbarview.view.ijkplayer.widget.media.IjkVideoView;
 
 import java.util.ArrayList;
 
@@ -33,13 +29,12 @@ import java.util.ArrayList;
  * @ projectName     :ToolBarView
  * @ version
  */
-public class PreViewBar extends RelativeLayout implements ItemChangeListener {
+public class PreViewBar extends RelativeLayout {
 
     private Context mContext;
     private final String TAG = getClass().getSimpleName();
 
-
-    private MediaController.MediaPlayerControl mediaPlayerControl;
+    private IjkVideoView ijkVideoView;
     private TextView tvTime;
     private RelativeLayout rl_preview_bar;
     private RelativeLayout rlMaterialRoot;
@@ -59,26 +54,25 @@ public class PreViewBar extends RelativeLayout implements ItemChangeListener {
 
     private float translateCurrent = 0;
 
-    //当前自动滑动位置
-    private float translateX = 0;
-
-
     //左边的限制View
     private View leftView;
     //右边的限制View
     private View rightView;
-    private View onTouchView;
+    private MaterialItemView onTouchView;
     //是否是自动滑动状态
     private boolean isAutoScroll = false;
     private int halfScreenWidth = 0;
 
 
-    private float totalWidth = 0;
+    private float totalWidth = 520;
     private int preViewItemWidth = 52;
-    private long totalTime = 1500;//毫秒计时
-    private long currentTime = 0;//毫秒计时
+    private float totalTime = 150;//秒计时
+    private float currentTime = 0;//秒计时
 
     //素材指示器
+
+    private int lastChangeValue = 0;
+
 
     public PreViewBar(Context context) {
         this(context, null);
@@ -91,11 +85,13 @@ public class PreViewBar extends RelativeLayout implements ItemChangeListener {
     public PreViewBar(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
 
-        init(context);
+        this.mContext = context;
+        setWillNotDraw(false);
+        init();
     }
 
-    private void init(Context context) {
-        this.mContext = context;
+    private void init() {
+
 
         LayoutInflater.from(mContext).inflate(R.layout.bar_preview, this, true);
 
@@ -115,20 +111,20 @@ public class PreViewBar extends RelativeLayout implements ItemChangeListener {
             public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
                 translateCurrent += dx;
                 Log.i(TAG, "onScrolled: translateCurrent=" + translateCurrent);
-                currentTime = (long) (translateCurrent / totalWidth * totalTime);
+                currentTime = translateCurrent / totalWidth * totalTime;
 
                 Log.i(TAG, "onScrolled: totalTime=" + totalTime);
                 Log.i(TAG, "onScrolled: currentTime=" + currentTime);
-                Log.i(TAG, "onScrolled: currentTime=" + TimeUtils.secToHMSTime_TextViewShow(currentTime / 1000d, 50));
 
                 if (!isAutoScroll()) {
                     Log.i(TAG, "onScrolled: 调整时间=" + (int) currentTime);
-                    mediaPlayerControl.seekTo((int) currentTime);
+                    if (ijkVideoView != null) {
+                        ijkVideoView.seekTo((int) (currentTime * 1000));
+                    }
                 }
-
-                tvTime.setText(TimeUtils.secToHMSTime_TextViewShow(currentTime / 1000d, 50));
+                tvTime.setText(secToHMSTime_TextViewShow((double) currentTime, 50));
                 if (onPreViewChangeListener != null) {
-                    onPreViewChangeListener.onTimelineChangeListener(totalTime / 1000d, currentTime / 1000);
+                    onPreViewChangeListener.onTimelineChangeListener(totalTime, currentTime);
                 }
                 setMaterialItemChange(dx);
                 super.onScrolled(recyclerView, dx, dy);
@@ -149,13 +145,18 @@ public class PreViewBar extends RelativeLayout implements ItemChangeListener {
     };
 
     private void setProgress() {
+        if (ijkVideoView != null) {
+            int position = ijkVideoView.getCurrentPosition();
+            int duration = ijkVideoView.getDuration();
+            Log.i(TAG, "setProgress: position=" + position);
+            Log.i(TAG, "setProgress: duration=" + duration);
+            if (duration > 0) {
+                // use long to avoid overflow
+                long pos = 1000L * position / duration;
+                startAnim((int) pos);
+                Log.i(TAG, "setProgress: pos=" + pos);
 
-        int position = mediaPlayerControl.getCurrentPosition();
-        int duration = mediaPlayerControl.getDuration();
-        if (duration > 0) {
-            // use long to avoid overflow
-            long pos = 1000L * position / duration;
-            startAnim((int) pos);
+            }
         }
 
     }
@@ -165,6 +166,7 @@ public class PreViewBar extends RelativeLayout implements ItemChangeListener {
      */
     public void start() {
         setAutoScroll(true);
+        lastChangeValue = (int) translateCurrent;
         postDelayed(mShowProgress, 0);
     }
 
@@ -176,11 +178,14 @@ public class PreViewBar extends RelativeLayout implements ItemChangeListener {
         removeCallbacks(mShowProgress);
 
     }
+
     /**
      * 绑定MediaPlayerControl
      */
-    public void setMediaPlayerControl(MediaController.MediaPlayerControl mediaPlayerControl) {
-        this.mediaPlayerControl = mediaPlayerControl;
+    public void bindVideoView(IjkVideoView ijkVideoView) {
+        this.ijkVideoView = ijkVideoView;
+
+        ijkVideoView.showMediaController();
     }
 
     /**
@@ -199,7 +204,10 @@ public class PreViewBar extends RelativeLayout implements ItemChangeListener {
 
             for (int position = 0; position < rlMaterialRoot.getChildCount(); position++) {
                 MaterialItemView materialItemView = (MaterialItemView) rlMaterialRoot.getChildAt(position);
-                materialItemView.firstSetX(materialAdapter.getItemTranslateX(position));
+                float time = materialAdapter.getItemTranslateX(position);
+
+                float x = time / totalTime * totalWidth;
+                materialItemView.firstSetX(x);
             }
         }
     }
@@ -223,9 +231,17 @@ public class PreViewBar extends RelativeLayout implements ItemChangeListener {
         /**
          * 计算出所以素材的占用空间
          * */
-        totalWidth = DensityUtil.dip2px(mContext, preViewItemWidth) * mAdapter.getSimpleCount();
+        totalWidth = dip2px(preViewItemWidth) * mAdapter.getSimpleCount();
 
         rvPreviewBar.setAdapter(mAdapter);
+    }
+
+    /**
+     * 根据手机的分辨率从 dp 的单位 转成为 px(像素)
+     */
+    public int dip2px(float dpValue) {
+        final float scale = getResources().getDisplayMetrics().density;
+        return (int) (dpValue * scale + 0.5f);
     }
 
     /**
@@ -240,16 +256,16 @@ public class PreViewBar extends RelativeLayout implements ItemChangeListener {
     /**
      * 添加素材位置
      */
-    @Override
     public void addMaterialItem() {
         final int position = materialAdapter.getCount() - 1;
         MaterialItemView material = materialAdapter.getItemMaterialView(rlMaterialRoot, position);
-        float offX = middleLine.getX() - halfScreenWidth;
-        setItemAttribute(position, material);
 
+
+        float offX = middleLine.getX() - halfScreenWidth + middleLine.getMeasuredWidth() / 2;
+
+        setItemAttribute(position, material);
         material.firstSetX(offX);
         material.setTransX(translateCurrent);
-
         onMaterialSelect(material, false);
 
         rlMaterialRoot.addView(material);
@@ -263,12 +279,11 @@ public class PreViewBar extends RelativeLayout implements ItemChangeListener {
     private void onMaterialSelect(MaterialItemView material, boolean needScroll) {
         if (onTouchView == null) {
             onTouchView = material;
-            onTouchView.setBackgroundColor(Color.BLUE);
-
+            onTouchView.setSelect();
         } else if (onTouchView != material) {
-            onTouchView.setBackgroundColor(Color.BLACK);
+            onTouchView.setNormal();
             onTouchView = material;
-            onTouchView.setBackgroundColor(Color.BLUE);
+            onTouchView.setSelect();
         }
 
         /**
@@ -302,10 +317,15 @@ public class PreViewBar extends RelativeLayout implements ItemChangeListener {
         @Override
         public void onScrolledX(View view, float scrolledX) {
 
-            materialAdapter.setScrollListener((int) view.getTag(), scrolledX);
+            float time = scrolledX / totalWidth * totalTime;
+            Log.i(TAG, "onScrolledX: time=" + time);
+
+            materialAdapter.setScrollListener((int) view.getTag(), time);
+
 
         }
     };
+
 
     /**
      * 统一设置素材的属性
@@ -321,7 +341,6 @@ public class PreViewBar extends RelativeLayout implements ItemChangeListener {
     /**
      * 移除一个素材位
      */
-    @Override
     public void removeMaterialItem(int position) {
         if (onTouchView == null && rlMaterialRoot.getChildCount() > 0) {
             rlMaterialRoot.removeViewAt(0);
@@ -363,8 +382,6 @@ public class PreViewBar extends RelativeLayout implements ItemChangeListener {
         mAdapter.addFooterView(rightView);
     }
 
-    private int lastChangeValue = 0;
-
     /**
      * 更新位置
      */
@@ -394,8 +411,9 @@ public class PreViewBar extends RelativeLayout implements ItemChangeListener {
 
 
     }
-
-
+    /**
+     * 跟随视频播放状态
+     * */
     private void setAutoScroll(boolean autoScroll) {
         isAutoScroll = autoScroll;
     }
@@ -410,10 +428,19 @@ public class PreViewBar extends RelativeLayout implements ItemChangeListener {
     @Override
     public boolean dispatchTouchEvent(MotionEvent ev) {
 
+        /**
+         * 取消滚动
+         * 视频暂停
+         * 隐藏播放按钮
+         * */
         if (ev.getAction() == MotionEvent.ACTION_DOWN) {
             setAutoScroll(false);
             removeCallbacks(mShowProgress);
-            mediaPlayerControl.pause();
+            if (ijkVideoView != null) {
+                ijkVideoView.pause();
+                ijkVideoView.hideMediaController();
+            }
+
         }
         if (ev.getAction() == MotionEvent.ACTION_UP ||
                 ev.getAction() == MotionEvent.ACTION_CANCEL) {
@@ -428,7 +455,7 @@ public class PreViewBar extends RelativeLayout implements ItemChangeListener {
         return totalTime;
     }
 
-    public void setTotalTime(int totalTime) {
+    public void setTotalTime(float totalTime) {
         this.totalTime = totalTime;
     }
 
@@ -484,7 +511,7 @@ public class PreViewBar extends RelativeLayout implements ItemChangeListener {
         /**
          * 在对应的素材指示器X轴发生改变时，会回调该函数
          */
-        void setScrollListener(int position, float scrolledX);
+        void setScrollListener(int position, float currentTime);
 
     }
 
@@ -518,5 +545,64 @@ public class PreViewBar extends RelativeLayout implements ItemChangeListener {
 
     }
 
+
+    public static String secToHMSTime_TextViewShow(double time, double more_than_one_hour) {
+
+        String timeStr = null;
+        double hour = 0;
+        double minute = 0;
+        double second = 0;
+        second = time % 60;
+        minute = time / 60;
+        hour = minute / 60;
+
+        if (more_than_one_hour > 60) {
+            String[] strs = String.valueOf(time).split("[.]");
+            double i = Double.parseDouble(strs[0]);
+            second = i % 60;
+            second = second + Double.parseDouble("." + strs[1]);
+            if (minute > 60) {
+                minute = minute % 60;
+            }
+            if (hour > 0) {
+                timeStr = unitFormat((int) hour) + ":" + unitFormat((int) minute) + ":" + unitFormat_seconds(second);
+            } else {
+                timeStr = "00:" + unitFormat((int) minute) + ":" + unitFormat_seconds(second);
+            }
+        } else {
+            String[] strs = String.valueOf(time).split("[.]");
+            double i = Double.parseDouble(strs[0]);
+            second = i % 60;
+            second = second + Double.parseDouble("." + strs[1]);
+            // hour = minute/60;
+            if (minute > 0) {
+                timeStr = unitFormat((int) minute) + ":" + unitFormat_seconds(second);
+            } else {
+                timeStr = "00:" + unitFormat_seconds(second);
+            }
+        }
+        return timeStr;
+
+    }
+
+    public static String unitFormat_seconds(double i) {
+        String retStr = null;
+        if (i >= 0 && i < 10) {
+            retStr = "0" + Double.toString(i);
+        } else {
+            retStr = "" + Double.toString(i);
+        }
+        retStr = retStr.substring(0, 4);
+        return retStr;
+    }
+
+    public static String unitFormat(int i) {
+        String retStr = null;
+        if (i >= 0 && i < 10)
+            retStr = "0" + Integer.toString(i);
+        else
+            retStr = "" + i;
+        return retStr;
+    }
 
 }

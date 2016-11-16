@@ -17,8 +17,6 @@
 package com.example.herve.toolbarview.view.ijkplayer.widget.media;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 

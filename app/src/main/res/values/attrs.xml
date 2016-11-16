@@ -1,8 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <attr name="entrySummaries" format="reference" />
+    <attr name="entrySummaries" format="reference"/>
 
     <declare-styleable name="IjkListPreference">
-        <attr name="entrySummaries" />
+        <attr name="entrySummaries"/>
+    </declare-styleable>
+
+    <declare-styleable name="MaterialItem">
+        <attr name="item_normal_color" format="color"/>
+        <attr name="item_select_color" format="color"/>
     </declare-styleable>
 </resources>

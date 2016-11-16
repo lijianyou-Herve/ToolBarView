@@ -1,13 +1,20 @@
 package com.example.herve.toolbarview.view.previewbar;
 
 import android.content.Context;
+import android.content.res.TypedArray;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.Path;
+import android.graphics.RectF;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
-import android.widget.ImageView;
+import android.view.ViewGroup;
+import android.widget.LinearLayout;
 
-import com.example.herve.toolbarview.utils.DensityUtil;
+import com.example.herve.toolbarview.R;
 
 /**
  * Created           :Herve on 2016/11/11.
@@ -18,19 +25,40 @@ import com.example.herve.toolbarview.utils.DensityUtil;
  * @ projectName     :ToolBarView
  * @ version
  */
-public class MaterialItemView extends ImageView {
-
+public class MaterialItemView extends LinearLayout {
+    /**
+     * 绘画类工具
+     */
+    private Paint paint;
+    private RectF rectF;
+    private Path draPath;
+    private int margin = 0;
+    /**
+     * 素材状态颜色
+     */
+    private int materialNormalColor = 0;
+    private int materialSelectColor = 0;
+    private int width = 60;
+    private int height = 60;
+    /**
+     * 已选中的颜色
+     */
+    private int materialColor = 0;
     // 计算滑动距离
     private int lastX = 0;
     private int lastY = 0;
-
     private Context mContext;
 
     /*左边*/
     private View leftLimitView;
     private View rightLimitView;
+    /**
+     * 平移的位置
+     */
     private float transX = 0;
-    private int width = 50;
+    /**
+     * 屏幕的一半
+     */
     private int halfScreenWidth = 0;
 
     private String TAG = getClass().getSimpleName();
@@ -45,15 +73,19 @@ public class MaterialItemView extends ImageView {
 
     public MaterialItemView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-        init(context);
+        TypedArray typedArray = context.obtainStyledAttributes(attrs, R.styleable.MaterialItem);
+        materialSelectColor = typedArray.getColor(R.styleable.MaterialItem_item_select_color, Color.RED);
+        materialNormalColor = typedArray.getColor(R.styleable.MaterialItem_item_normal_color, Color.DKGRAY);
+        materialColor = materialNormalColor;
+        typedArray.recycle();
+        mContext = context;
+        init();
     }
-
 
     public void setLimitViews(View leftLimitView, View rightLimitView) {
         this.leftLimitView = leftLimitView;
         this.rightLimitView = rightLimitView;
     }
-
 
     /**
      * 获取屏幕的宽度
@@ -62,16 +94,70 @@ public class MaterialItemView extends ImageView {
         return context.getResources().getDisplayMetrics().widthPixels;
     }
 
+
     /**
-     * @param context
+     * 设置素材指示器选中和正常状态
+     * 的颜色
      */
-    private void init(Context context) {
-        mContext = context;
-        halfScreenWidth = getScreenWidth(mContext) / 2;
-        width = DensityUtil.dip2px(context, width);
+    public void setMaterialColor(int materialNormalColor, int materialSelectColor) {
+        this.materialNormalColor = materialNormalColor;
+        this.materialSelectColor = materialSelectColor;
+        materialColor = materialNormalColor;
+        paint.setColor(materialNormalColor);
+        postInvalidate();
+    }
+
+    /**
+     * 选中状态
+     */
+    public void setSelect() {
+        paint.setColor(materialSelectColor);
+        materialColor = materialSelectColor;
+
+        postInvalidate();
 
     }
 
+    /**
+     * 正常状态
+     */
+    public void setNormal() {
+        paint.setColor(materialNormalColor);
+        materialColor = materialNormalColor;
+        postInvalidate();
+    }
+
+
+    /**
+     */
+    private void init() {
+
+        paint = new Paint();
+        paint.setColor(materialNormalColor);
+        paint.setAntiAlias(true);
+        paint.setStyle(Paint.Style.FILL);
+        paint.setStrokeWidth(1);
+        margin = dip2px(10);
+        rectF = new RectF();
+        draPath = new Path();
+        halfScreenWidth = getScreenWidth(mContext) / 2;
+//        width = dip2px(width);
+
+        /**
+         * 在第一个位置添加一个透明的View使内容居中抵消绘制的三角形高度*/
+        View view = new View(mContext);
+        view.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, margin));
+        addView(view, 0);
+
+    }
+
+    /**
+     * 根据手机的分辨率从 dp 的单位 转成为 px(像素)
+     */
+    public int dip2px(float dpValue) {
+        final float scale = getResources().getDisplayMetrics().density;
+        return (int) (dpValue * scale + 0.5f);
+    }
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
@@ -102,7 +188,7 @@ public class MaterialItemView extends ImageView {
                 } else if (rightLimitView.isShown() && getX() + offsetX + width / 2 > rightLimitView.getX()) {//超过右边界，不让继续滑动
                     Log.i(TAG, "onTouchEvent: 右边界");
 
-                    setX(rightLimitView.getX() - width / 2);
+                    setX(rightLimitView.getX() - getMeasuredWidth() / 2);
 
                 } else {//正常值范围
                     setX(getX() + offsetX);
@@ -149,7 +235,12 @@ public class MaterialItemView extends ImageView {
      * 通过这里来监听位置的变化
      */
     public void firstSetX(float x) {
+        int w = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED);
+        int h = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED);
+        measure(w, h);
+        width = getMeasuredWidth();
 
+        Log.i(TAG, "setX: width=" + width);
         Log.i(TAG, "setX: getMeasuredWidth=" + halfScreenWidth);
         float reallyX = halfScreenWidth - width / 2 + x;
         setTransX(x);
@@ -180,6 +271,49 @@ public class MaterialItemView extends ImageView {
     interface OnCustomTouchListener {
 
         void onScrolledX(View view, float scrolledX);
+
+    }
+
+
+    @Override
+    protected void onDraw(Canvas canvas) {
+        super.onDraw(canvas);
+
+        Log.i(TAG, "onDraw: 绘画次数");
+        paint.setColor(materialColor);
+        paint.setStyle(Paint.Style.FILL);
+        paint.setStrokeWidth(1);
+        /**
+         * 画圆角矩形
+         * */
+        rectF.left = 0;
+        rectF.right = getWidth();
+        rectF.top = margin;
+        rectF.bottom = getHeight();
+        canvas.drawRoundRect(rectF, 6, 6, paint);
+
+
+        Log.i(TAG, "onDraw: getWidth()=" + getWidth());
+        /**
+         * 画三角形
+         * */
+        draPath.moveTo(getWidth() / 2 - margin / 3 * 2, margin);// 此点为多边形的起点
+        draPath.lineTo(getWidth() / 2, 0);
+        draPath.lineTo(getWidth() / 2 + margin / 3 * 2, margin);
+        draPath.close(); // 使这些点构成封闭的多边形
+        canvas.drawPath(draPath, paint);
+        /**
+         * 画圆角矩形
+         * */
+        paint.setStyle(Paint.Style.STROKE);
+        paint.setColor(Color.WHITE);
+        paint.setStrokeWidth(1);
+        rectF.left = 0;
+        rectF.right = getWidth();
+        rectF.top = margin;
+        rectF.bottom = getHeight();
+        canvas.drawRoundRect(rectF, 6, 6, paint);
+
 
     }
 }

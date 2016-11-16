@@ -1,10 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 <com.example.herve.toolbarview.view.previewbar.MaterialItemView
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/iv_material"
-    android:layout_width="50dp"
-    android:layout_height="50dp"
-    android:background="@color/color_black"
-    android:layout_margin="1dp"
-    android:layout_marginTop="4dp"/>
+    android:layout_width="60dp"
+    android:layout_height="60dp"
+    android:background="@android:color/transparent"
+    android:gravity="center"
+    android:orientation="vertical"
+    app:item_normal_color="@color/black_alpha"
+    app:item_select_color="@color/yellow_alpha">
+
+    <TextView
+        android:id="@+id/tv_item"
+        android:layout_width="60dp"
+        android:layout_height="50dp"
+        android:layout_gravity="center"
+        android:gravity="center"
+        android:text="@string/close"/>
+
+</com.example.herve.toolbarview.view.previewbar.MaterialItemView>

@@ -15,11 +15,9 @@ import com.example.herve.toolbarview.R;
 import com.example.herve.toolbarview.adapter.PreViewItemAdapter;
 import com.example.herve.toolbarview.bean.MaterialItemBean;
 import com.example.herve.toolbarview.common.AppConstant;
-import com.example.herve.toolbarview.view.ijkplayer.widget.media.IMediaController;
+import com.example.herve.toolbarview.view.ijkplayer.widget.media.IjkVideoView;
 import com.example.herve.toolbarview.view.previewbar.MaterialItemView;
 import com.example.herve.toolbarview.view.previewbar.PreViewBar;
-import com.example.herve.toolbarview.view.ijkplayer.widget.media.AndroidMediaController;
-import com.example.herve.toolbarview.view.ijkplayer.widget.media.IjkVideoView;
 import com.example.herve.toolbarview.view.previewbar.PreViewBarMediaControl;
 
 import java.util.ArrayList;
@@ -41,12 +39,14 @@ public class MainActivity extends AppCompatActivity {
     private PreViewBarMediaControl mediaController;
     private PreViewItemAdapter preViewItemAdapter;
 
-    private int selectPosition = 0;
+    private int selectPosition = -1;
     private Context mContext;
     private ArrayList<String> data;
     private ArrayList<MaterialItemBean> materialItemBeans;
     private final String TAG = getClass().getSimpleName();
     private String url;
+
+    private boolean canPlaying = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -78,20 +78,21 @@ public class MainActivity extends AppCompatActivity {
                 if (ijk_video.isPlaying()) {
                     ijk_video.pause();
                 } else {
-                    ijk_video.setVideoPath(url);
+                    canPlaying = true;
                     ijk_video.start();
+                    previewBar.start();
+
                 }
 
             }
         });
-
 
         btn_remove.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 
                 preViewItemAdapter.removeMaterialItem(selectPosition);
-
+                selectPosition = -1;
             }
         });
 
@@ -127,6 +128,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onTimelineChangeListener(double totalTime, double currentTime) {
 
+
             }
 
             @Override
@@ -141,8 +143,10 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onPrepared(IMediaPlayer mp) {
 
-                mp.start();
-                previewBar.start();
+                if (canPlaying) {
+                    mp.start();
+                    previewBar.start();
+                }
 
             }
         });
@@ -167,14 +171,13 @@ public class MainActivity extends AppCompatActivity {
                 } else {
                     previewBar.pause();
                 }
-
             }
         });
 
 
     }
 
-    private int totalTime = 34000;
+    private float totalTime = 34;
 
     private void initData() {
 
@@ -187,16 +190,14 @@ public class MainActivity extends AppCompatActivity {
         mediaController = new PreViewBarMediaControl(mContext);
         ijk_video.setMediaController(mediaController);
         ijk_video.setHudView(hud_view);
-        previewBar.setMediaPlayerControl(ijk_video);
+        ijk_video.setVideoPath(url);
+        previewBar.bindVideoView(ijk_video);
         data = new ArrayList<>();
 
         if (AppConstant.materialItemBeans == null
                 || AppConstant.materialItemBeans.size() <= 0) {
             AppConstant.materialItemBeans = new ArrayList<>();
 
-            for (int i = 0; i < 1; i++) {
-                AppConstant.materialItemBeans.add(new MaterialItemBean());
-            }
         }
 
         materialItemBeans = AppConstant.materialItemBeans;
@@ -217,6 +218,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
+        ijk_video.stopPlayback();
         super.onDestroy();
 
     }

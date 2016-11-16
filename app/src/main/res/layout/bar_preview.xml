@@ -42,8 +42,7 @@
         android:id="@+id/rl_material_root"
         android:layout_width="match_parent"
         android:layout_height="52dp"
-        android:layout_below="@+id/rl_preview_bar"
-        android:background="@color/colorAccent">
+        android:layout_below="@+id/rl_preview_bar">
 
     </RelativeLayout>
 

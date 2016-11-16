@@ -1,4 +1,4 @@
-/*
+package com.example.herve.toolbarview.view.ijkplayer.widget.media;/*
  * Copyright (C) 2015 Zhang Rui <bbcallen@gmail.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package com.example.herve.toolbarview.view.ijkplayer.widget.media;
 
 import android.view.View;
 import android.widget.MediaController;
+
 
 public interface IMediaController {
     void hide();
@@ -34,8 +34,14 @@ public interface IMediaController {
 
     void show();
 
-    //----------
+    void setFullScreenListener(View.OnClickListener fullScreenListener);
+
+    void showingLisnter(PlayerMediaController.ShowListener showListener);
+
+    void setFullIcon(boolean isFull);
+
+    // ----------
     // Extends
-    //----------
+    // ----------
     void showOnce(View view);
 }

@@ -1,5 +1,7 @@
 package com.example.herve.toolbarview.bean;
 
+import android.util.Log;
+
 /**
  * Created           :Herve on 2016/11/11.
  *
@@ -11,17 +13,32 @@ package com.example.herve.toolbarview.bean;
  */
 public class MaterialItemBean {
 
-    private float X;
+    private String text;
+    private float time;
+    private String TAG = getClass().getSimpleName();
 
-
-    public MaterialItemBean() {
+    public MaterialItemBean(String text) {
+        this.text = text;
     }
 
-    public float getX() {
-        return X;
+    public String getText() {
+        return text;
     }
 
-    public void setX(float x) {
-        X = x;
+    public float getTime() {
+        Log.i(TAG, "getTime: time=" + time);
+
+        return time;
     }
+
+    public void setTime(float time) {
+        Log.i(TAG, "setTime: time=" + time);
+        this.time = time;
+    }
+
+    public void setText(String text) {
+        this.text = text;
+    }
+
+
 }

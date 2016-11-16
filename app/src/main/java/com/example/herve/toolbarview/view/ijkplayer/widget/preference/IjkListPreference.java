@@ -19,11 +19,12 @@ package com.example.herve.toolbarview.view.ijkplayer.widget.preference;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.support.v7.preference.ListPreference;
-//import android.preference.ListPreference;
 import android.text.TextUtils;
 import android.util.AttributeSet;
 
 import com.example.herve.toolbarview.R;
+
+//import android.preference.ListPreference;
 
 
 public class IjkListPreference extends ListPreference {

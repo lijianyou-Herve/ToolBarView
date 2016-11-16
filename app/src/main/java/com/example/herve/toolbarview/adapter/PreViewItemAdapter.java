@@ -40,7 +40,6 @@ public class PreViewItemAdapter extends HeadFootBaseAdapter<PreViewItemAdapter.P
     protected PreViewItemViewHolder onCreateItemViewHolder(ViewGroup parent, int viewType) {
         View itemView = LayoutInflater.from(mContext).inflate(R.layout.item_preview, parent, false);
 
-
         return new PreViewItemViewHolder(itemView);
     }
 
@@ -63,6 +62,9 @@ public class PreViewItemAdapter extends HeadFootBaseAdapter<PreViewItemAdapter.P
     public MaterialItemView getItemMaterialView(ViewGroup parent, int position) {
         MaterialItemView materialItemView = (MaterialItemView) LayoutInflater.from(mContext).inflate(R.layout.item_material_layout, parent, false);
 
+        TextView tv_item = (TextView) materialItemView.findViewById(R.id.tv_item);
+        tv_item.setText(materialData.get(position).getText());
+
 
         return materialItemView;
     }
@@ -70,7 +72,9 @@ public class PreViewItemAdapter extends HeadFootBaseAdapter<PreViewItemAdapter.P
     @Override
     public float getItemTranslateX(int position) {
 
-        return materialData.get(position).getX();
+        float time = materialData.get(position).getTime();
+
+        return time;
     }
 
     @Override
@@ -84,24 +88,30 @@ public class PreViewItemAdapter extends HeadFootBaseAdapter<PreViewItemAdapter.P
     }
 
     @Override
-    public void setScrollListener(int position, float scrolledX) {
+    public void setScrollListener(int position, float currentTime) {
 
         if (materialData.size() == 0 ||
                 position > materialData.size() - 1) {
             return;
         }
-        Log.e(TAG, "setScrollListener: 元素位置=" + position + "位置变化=" + scrolledX);
-        materialData.get(position).setX(scrolledX);
+        Log.e(TAG, "setScrollListener: 元素位置=" + position + "位置变化=" + currentTime);
+        materialData.get(position).setTime(currentTime);
+//        materialData.get(position).setX(scrolledX);
 
     }
 
 
     public void addMaterialItem() {
-        materialData.add(new MaterialItemBean());
+        materialData.add(new MaterialItemBean("第" + materialData.size() + "个"));
         preViewBar.addMaterialItem();
     }
 
     public void removeMaterialItem(int position) {
+
+        if (position < 0) {
+            return;
+        }
+        Log.i(TAG, "removeMaterialItem: materialData.size()=" + materialData.size());
         if (materialData.size() > 0) {
             preViewBar.removeMaterialItem(position);
             materialData.remove(position);

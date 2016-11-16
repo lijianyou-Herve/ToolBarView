@@ -12,6 +12,9 @@
     <color name="color_yellow">#c3e6db4b</color>
     <color name="white">#FFF9F2</color> <!-- 白色 -->
 
+    <color name="yellow_alpha">#FFF5DD48</color> <!-- 黄色 -->
+    <color name="black_alpha">#717883</color> <!-- 黑色 -->
+
 
     <color name="black_overlay">#66000000</color>
     <color name="mediacontroller_bg">#64151515</color>
