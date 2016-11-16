@@ -92,6 +92,8 @@ public class PreViewBar extends RelativeLayout {
         init();
     }
 
+    private long seekToFrequencyTime;
+
     private void init() {
 
 
@@ -109,6 +111,19 @@ public class PreViewBar extends RelativeLayout {
 
 
         rvPreviewBar.addOnScrollListener(new RecyclerView.OnScrollListener() {
+
+            @Override
+            public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
+                super.onScrollStateChanged(recyclerView, newState);
+
+                if (newState == RecyclerView.SCROLL_STATE_IDLE) {
+                    Log.i(TAG, "onScrolled: 调整时间B=" + (int) currentTime);
+
+                    ijkVideoView.seekTo((int) (currentTime * 1000));
+                }
+
+            }
+
             @Override
             public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
                 translateCurrent += dx;
@@ -119,9 +134,12 @@ public class PreViewBar extends RelativeLayout {
                 Log.i(TAG, "onScrolled: currentTime=" + currentTime);
 
                 if (!isAutoScroll()) {
-                    Log.i(TAG, "onScrolled: 调整时间=" + (int) currentTime);
-                    if (ijkVideoView != null) {
-                        ijkVideoView.seekTo((int) (currentTime * 1000));
+                    if (System.currentTimeMillis() - seekToFrequencyTime > 100) {
+                        Log.i(TAG, "onScrolled: 调整时间A=" + (int) currentTime);
+                        if (ijkVideoView != null) {
+                            ijkVideoView.seekTo((int) (currentTime * 1000));
+                        }
+                        seekToFrequencyTime = System.currentTimeMillis();
                     }
                 }
                 tvTime.setText(secToHMSTime_TextViewShow((double) currentTime, 50));

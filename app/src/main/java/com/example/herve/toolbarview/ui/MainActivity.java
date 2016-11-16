@@ -2,6 +2,7 @@ package com.example.herve.toolbarview.ui;
 
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
@@ -79,8 +80,8 @@ public class MainActivity extends AppCompatActivity {
                     ijk_video.pause();
                 } else {
                     canPlaying = true;
-                    ijk_video.start();
                     previewBar.start();
+                    ijk_video.start();
                 }
 
             }
@@ -144,9 +145,7 @@ public class MainActivity extends AppCompatActivity {
 
                 if (canPlaying) {
                     mp.start();
-                    previewBar.start();
                 }
-
             }
         });
 
@@ -179,13 +178,17 @@ public class MainActivity extends AppCompatActivity {
 
     private void initData() {
 
-
         url = Environment.getExternalStorageDirectory() + "/BJX" + "/20160918_104437.mp4";
 
         IjkMediaPlayer.loadLibrariesOnce(null);
         IjkMediaPlayer.native_profileBegin("libijkplayer.so");
 
         mediaController = new PreViewBarMediaControl(mContext);
+        ijk_video.setBackgroundColor(Color.BLACK);
+        ijk_video.changeAspectRaito(0);
+        ijk_video.setRender(2);
+        ijk_video.setMediaPlayerType(1);
+
         ijk_video.setMediaController(mediaController);
         ijk_video.setHudView(hud_view);
         ijk_video.setVideoPath(url);
@@ -216,7 +219,13 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
-        ijk_video.stopPlayback();
+        try {
+            ijk_video.stopPlayback();
+            ijk_video.release(true);
+            ijk_video.stopBackgroundPlay();
+            IjkMediaPlayer.native_profileEnd();
+        } catch (Exception e) {
+        }
         super.onDestroy();
 
     }
