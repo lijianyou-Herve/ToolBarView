@@ -142,7 +142,7 @@ public class PreViewBar extends RelativeLayout {
                         seekToFrequencyTime = System.currentTimeMillis();
                     }
                 }
-                tvTime.setText(secToHMSTime_TextViewShow((double) currentTime, 50));
+                tvTime.setText(secToHMSTime_TextViewShow((double) currentTime, totalTime/60/60));
                 if (onPreViewChangeListener != null) {
                     onPreViewChangeListener.onTimelineChangeListener(totalTime, currentTime);
                 }
@@ -215,8 +215,8 @@ public class PreViewBar extends RelativeLayout {
             public void onCompletion(IMediaPlayer iMediaPlayer) {
 
                 Log.i(TAG, "onCompletion: position=" + 1000);
-//                startAnim(1000);
-//                removeCallbacks(mShowProgress);
+                startAnim(1000);
+                removeCallbacks(mShowProgress);
 
 
             }

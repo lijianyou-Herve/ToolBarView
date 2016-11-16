@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:layout_width="match_parent"
+              android:layout_height="wrap_content"
+              android:orientation="vertical">
+
+    <RelativeLayout
+        android:id="@+id/titleController"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/mediacontroller_bg">
+
+        <RelativeLayout
+            android:id="@+id/titleController_rl_back"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="11dp">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:gravity="center_vertical|left">
+
+                <ImageView
+                    android:layout_width="14dp"
+                    android:layout_height="14dp"
+                    android:scaleType="centerInside"/>
+
+                <TextView
+                    style="@style/title_button"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/back"/>
+            </LinearLayout>
+        </RelativeLayout>
+
+        <TextView
+            android:id="@+id/titlecontroller_file_name"
+            style="@style/MediaController_Text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_centerVertical="true"
+            android:layout_marginTop="11dp"
+            android:singleLine="true"/>
+    </RelativeLayout>
+
+</LinearLayout>
