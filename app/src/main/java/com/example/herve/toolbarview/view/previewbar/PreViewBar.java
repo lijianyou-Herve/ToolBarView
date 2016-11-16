@@ -20,6 +20,8 @@ import com.example.herve.toolbarview.view.ijkplayer.widget.media.IjkVideoView;
 
 import java.util.ArrayList;
 
+import tv.danmaku.ijk.media.player.IMediaPlayer;
+
 /**
  * Created           :Herve on 2016/11/10.
  *
@@ -139,7 +141,13 @@ public class PreViewBar extends RelativeLayout {
         @Override
         public void run() {
             setProgress();
-            postDelayed(mShowProgress, 100);
+
+            if (isShown() && ijkVideoView.isPlaying()) {
+                postDelayed(mShowProgress, 100);
+            }
+            if (!ijkVideoView.isPlaying()) {
+                removeCallbacks(mShowProgress);
+            }
 
         }
     };
@@ -150,9 +158,9 @@ public class PreViewBar extends RelativeLayout {
             int duration = ijkVideoView.getDuration();
             Log.i(TAG, "setProgress: position=" + position);
             Log.i(TAG, "setProgress: duration=" + duration);
-            if (duration > 0) {
+            if (position > 0) {
                 // use long to avoid overflow
-                long pos = 1000L * position / duration;
+                long pos = 1000 * position / duration;
                 startAnim((int) pos);
                 Log.i(TAG, "setProgress: pos=" + pos);
 
@@ -184,7 +192,17 @@ public class PreViewBar extends RelativeLayout {
      */
     public void bindVideoView(IjkVideoView ijkVideoView) {
         this.ijkVideoView = ijkVideoView;
+        ijkVideoView.setOnCompletionListener(new IMediaPlayer.OnCompletionListener() {
+            @Override
+            public void onCompletion(IMediaPlayer iMediaPlayer) {
 
+                Log.i(TAG, "onCompletion: position=" + 1000);
+//                startAnim(1000);
+//                removeCallbacks(mShowProgress);
+
+
+            }
+        });
         ijkVideoView.showMediaController();
     }
 
@@ -201,7 +219,6 @@ public class PreViewBar extends RelativeLayout {
             }
         } else {//第一次进入
             onAttach = true;
-
             for (int position = 0; position < rlMaterialRoot.getChildCount(); position++) {
                 MaterialItemView materialItemView = (MaterialItemView) rlMaterialRoot.getChildAt(position);
                 float time = materialAdapter.getItemTranslateX(position);
@@ -411,9 +428,10 @@ public class PreViewBar extends RelativeLayout {
 
 
     }
+
     /**
      * 跟随视频播放状态
-     * */
+     */
     private void setAutoScroll(boolean autoScroll) {
         isAutoScroll = autoScroll;
     }

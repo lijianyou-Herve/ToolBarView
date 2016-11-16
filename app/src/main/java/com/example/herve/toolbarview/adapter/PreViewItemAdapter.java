@@ -65,16 +65,13 @@ public class PreViewItemAdapter extends HeadFootBaseAdapter<PreViewItemAdapter.P
         TextView tv_item = (TextView) materialItemView.findViewById(R.id.tv_item);
         tv_item.setText(materialData.get(position).getText());
 
-
         return materialItemView;
     }
 
     @Override
     public float getItemTranslateX(int position) {
 
-        float time = materialData.get(position).getTime();
-
-        return time;
+        return materialData.get(position).getTime();
     }
 
     @Override
@@ -96,8 +93,6 @@ public class PreViewItemAdapter extends HeadFootBaseAdapter<PreViewItemAdapter.P
         }
         Log.e(TAG, "setScrollListener: 元素位置=" + position + "位置变化=" + currentTime);
         materialData.get(position).setTime(currentTime);
-//        materialData.get(position).setX(scrolledX);
-
     }
 
 

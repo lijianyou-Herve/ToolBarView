@@ -81,7 +81,6 @@ public class MainActivity extends AppCompatActivity {
                     canPlaying = true;
                     ijk_video.start();
                     previewBar.start();
-
                 }
 
             }
@@ -174,7 +173,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-
     }
 
     private float totalTime = 34;
@@ -201,7 +199,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         materialItemBeans = AppConstant.materialItemBeans;
-        for (int i = 0; i < 5; i++) {
+        for (int i = 0; i < 10; i++) {
             data.add("第" + i + "个");
         }
 
