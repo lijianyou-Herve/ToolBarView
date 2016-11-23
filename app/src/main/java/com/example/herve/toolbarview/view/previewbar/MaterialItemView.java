@@ -16,23 +16,19 @@ import android.widget.LinearLayout;
 
 import com.example.herve.toolbarview.R;
 
-/**
- * Created           :Herve on 2016/11/11.
- *
- * @ Author          :Herve
- * @ e-mail          :lijianyou.herve@gmail.com
- * @ LastEdit        :2016/11/11
- * @ projectName     :ToolBarView
- * @ version
- */
+
 public class MaterialItemView extends LinearLayout {
     /**
      * 绘画类工具
      */
+    private int mediaType ;//0 是图片，1是文字
     private Paint paint;
     private RectF rectF;
     private Path draPath;
     private int margin = 0;
+
+    private int lineSize = 1;
+
     /**
      * 素材状态颜色
      */
@@ -118,6 +114,14 @@ public class MaterialItemView extends LinearLayout {
 
     }
 
+    public int getMediaType() {
+        return mediaType;
+    }
+
+    public void setMediaType(int mediaType) {
+        this.mediaType = mediaType;
+    }
+
     /**
      * 正常状态
      */
@@ -127,8 +131,8 @@ public class MaterialItemView extends LinearLayout {
         postInvalidate();
     }
 
-
     /**
+     * 初始化数值
      */
     private void init() {
 
@@ -142,11 +146,10 @@ public class MaterialItemView extends LinearLayout {
         draPath = new Path();
         halfScreenWidth = getScreenWidth(mContext) / 2;
 //        width = dip2px(width);
-
         /**
          * 在第一个位置添加一个透明的View使内容居中抵消绘制的三角形高度*/
         View view = new View(mContext);
-        view.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, margin));
+        view.setLayoutParams(new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, margin));
         addView(view, 0);
 
     }
@@ -235,8 +238,8 @@ public class MaterialItemView extends LinearLayout {
      * 通过这里来监听位置的变化
      */
     public void firstSetX(float x) {
-        int w = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED);
-        int h = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED);
+        int w = MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED);
+        int h = MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED);
         measure(w, h);
         width = getMeasuredWidth();
 
@@ -286,10 +289,10 @@ public class MaterialItemView extends LinearLayout {
         /**
          * 画圆角矩形
          * */
-        rectF.left = 0;
-        rectF.right = getWidth();
-        rectF.top = margin;
-        rectF.bottom = getHeight();
+        rectF.left = lineSize;
+        rectF.right = getWidth() - lineSize;
+        rectF.top = margin + lineSize;
+        rectF.bottom = getHeight() - lineSize;
         canvas.drawRoundRect(rectF, 6, 6, paint);
 
 
@@ -303,15 +306,15 @@ public class MaterialItemView extends LinearLayout {
         draPath.close(); // 使这些点构成封闭的多边形
         canvas.drawPath(draPath, paint);
         /**
-         * 画圆角矩形
+         * 画圆角矩形(空心)
          * */
         paint.setStyle(Paint.Style.STROKE);
         paint.setColor(Color.WHITE);
-        paint.setStrokeWidth(1);
-        rectF.left = 0;
-        rectF.right = getWidth();
-        rectF.top = margin;
-        rectF.bottom = getHeight();
+        paint.setStrokeWidth(lineSize);
+        rectF.left = lineSize;
+        rectF.right = getWidth() - lineSize;
+        rectF.top = margin + lineSize;
+        rectF.bottom = getHeight() - lineSize;
         canvas.drawRoundRect(rectF, 6, 6, paint);
 
 

@@ -18,6 +18,7 @@
 
     <color name="black_overlay">#66000000</color>
     <color name="mediacontroller_bg">#64151515</color>
+    <color name="bg_windows">#1c212d</color>
 
     <color name="ijk_color_blue_main">@color/ijk_color_blue_500</color>
     <color name="ijk_color_blue_50">#E3F2FD</color>

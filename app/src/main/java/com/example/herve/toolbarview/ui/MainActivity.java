@@ -126,13 +126,12 @@ public class MainActivity extends AppCompatActivity {
 
         previewBar.setOnPreViewChangeListener(new PreViewBar.OnPreViewChangeListener() {
             @Override
-            public void onTimelineChangeListener(double totalTime, double currentTime) {
-
+            public void onTimelineChangeListener(float totalTime, float currentTime) {
 
             }
 
             @Override
-            public void onMaterialItemSelectListener(MaterialItemView view, int position) {
+            public void onMaterialItemSelectListener(MaterialItemView view, int mediaType, int position) {
 
                 selectPosition = position;
 

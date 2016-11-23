@@ -64,7 +64,7 @@ public class PreViewItemAdapter extends HeadFootBaseAdapter<PreViewItemAdapter.P
 
         TextView tv_item = (TextView) materialItemView.findViewById(R.id.tv_item);
         tv_item.setText(materialData.get(position).getText());
-
+        materialItemView.setMediaType(materialData.get(position).getType());
         return materialItemView;
     }
 
@@ -75,9 +75,10 @@ public class PreViewItemAdapter extends HeadFootBaseAdapter<PreViewItemAdapter.P
     }
 
     @Override
-    public int getCount() {
+    public int getMaterialCount() {
         return materialData.size();
     }
+
 
     @Override
     public MaterialItemBean getItem(int position) {
@@ -97,7 +98,11 @@ public class PreViewItemAdapter extends HeadFootBaseAdapter<PreViewItemAdapter.P
 
 
     public void addMaterialItem() {
-        materialData.add(new MaterialItemBean("第" + materialData.size() + "个"));
+        MaterialItemBean materialItemBean = new MaterialItemBean();
+        materialItemBean.setType(0);
+        materialItemBean.setText(materialData.size() + "");
+
+        materialData.add(materialItemBean);
         preViewBar.addMaterialItem();
     }
 
